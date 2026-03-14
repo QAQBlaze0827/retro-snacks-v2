@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="zh">
+
+<head>
+    <meta charset="UTF-8">
+    <title>復古零食店</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <header>
+
+        <div class="menu">☰
+            <div class="dropdown">
+                <div onclick="filterCategory('all')">全部商品</div>
+                <div onclick="filterCategory('candy')">糖果</div>
+                <div onclick="filterCategory('cookie')">餅乾</div>
+                <div onclick="filterCategory('drink')">飲料</div>
+            </div>
+        </div>
+
+        <img src="images/logo.jpg" class="logo">
+
+        <input id="searchInput" class="search" placeholder="搜尋零食..." onkeyup="searchProduct()">
+
+        <button onclick="openLogin()" id="loginBtn">登入</button>
+        <button onclick="openRegister()" id="regBtn">註冊</button>
+
+        <div id="userArea"></div>
+
+        <div class="cartIcon" id="cartBtn" onclick="openCart()" style="display: none;">
+            <img src="images/cart.png" alt="" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; vertical-align: middle;">
+        </div>
+
+    </header>
+
+
+    <div class="banner">
+        <img id="slide" src="images/banner1.jpg">
+    </div>
+
+
+    <div class="products">
+
+
+        <div class="card candy">
+            <img src="images/5涵.jpg">
+            <h3>大豬公糖</h3>
+            <p>$20</p>
+
+            <input type="number" id="qty1" value="1" min="1">
+
+            <button onclick="showProduct('大豬公糖','80年代經典糖果','images/snack1.jpg',20)">
+                商品介紹
+            </button>
+
+            <button onclick="addToCart('大豬公糖',20,'qty1')">
+                加入購物車
+            </button>
+
+        </div>
+
+
+        <div class="card cookie">
+            <img src="images/國華出國.jpg">
+            <h3>飛壘口香糖</h3>
+            <p>$15</p>
+
+            <input type="number" id="qty2" value="1" min="1">
+
+            <button onclick="showProduct('飛壘口香糖','童年回憶','images/snack2.jpg',15)">
+                商品介紹
+            </button>
+
+            <button onclick="addToCart('飛壘口香糖',15,'qty2')">
+                加入購物車
+            </button>
+
+        </div>
+
+
+        <div class="card drink">
+            <img src="images/宣傳.jpg">
+            <h3>彈珠汽水</h3>
+            <p>$30</p>
+
+            <input type="number" id="qty3" value="1" min="1">
+
+            <button onclick="showProduct('彈珠汽水','復古飲料','images/snack3.jpg',30)">
+                商品介紹
+            </button>
+
+            <button onclick="addToCart('彈珠汽水',30,'qty3')">
+                加入購物車
+            </button>
+
+        </div>
+
+
+        <div class="card candy">
+            <img src="images/王室敏.jpg">
+            <h3>酸梅糖</h3>
+            <p>$10</p>
+
+            <input type="number" id="qty4" value="1" min="1">
+
+            <button onclick="showProduct('酸梅糖','懷舊酸甜滋味','images/snack4.jpg',10)">
+                商品介紹
+            </button>
+
+            <button onclick="addToCart('酸梅糖',10,'qty4')">
+                加入購物車
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+
+            <span onclick="closePopup()">✕</span>
+
+            <h2 id="pname"></h2>
+
+            <img id="pimg">
+
+            <p id="ptext"></p>
+
+            <p id="pprice"></p>
+
+        </div>
+    </div>
+
+
+    <div id="cartModal" class="modal">
+
+        <div class="modal-box">
+
+            <h2>購物車</h2>
+
+            <div id="cartItems"></div>
+
+            <h3 id="cartTotal"></h3>
+
+            <button onclick="checkout()">結帳</button>
+
+            <span class="close" onclick="closeCart()">✕</span>
+
+        </div>
+
+    </div>
+
+
+    <div id="loginModal" class="modal">
+        <div class="modal-box">
+
+            <h2>會員登入</h2>
+
+            <input id="loginUser" type="text" placeholder="帳號">
+            <input id="loginPass" type="password" placeholder="密碼">
+
+            <button onclick="login()">登入</button>
+
+            <p onclick="switchRegister()">沒有帳號？註冊</p>
+
+            <span class="close" onclick="closeModal()">✕</span>
+
+        </div>
+    </div>
+
+
+    <div id="registerModal" class="modal">
+        <div class="modal-box">
+
+            <h2>會員註冊</h2>
+
+            <input id="regUser" type="text" placeholder="帳號">
+            <input id="regEmail" type="email" placeholder="Email">
+            <input id="regPass" type="password" placeholder="密碼">
+
+            <button onclick="register()">註冊</button>
+
+            <p onclick="switchLogin()">已有帳號？登入</p>
+
+            <span class="close" onclick="closeModal()">✕</span>
+
+        </div>
+    </div>
+
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>

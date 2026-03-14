@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>個人資訊 - 復古零食店</title>
+    <link rel="stylesheet" href="style.css"> 
+    <style>
+        /* 針對個人資訊頁面稍微寫一點排版 */
+        body {
+            background-color: #3b2f2f; /* 讓背景有點顏色，突顯白色卡片 */
+        }
+        .profile-container {
+            max-width: 600px;
+            margin: 50px auto;
+            background: #cf9a69;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .profile-header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #5a3d2b; /* 配合你原本的深咖啡色 */
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        .back-btn {
+            cursor: pointer;
+            font-size: 20px;
+            margin-right: auto; /* 把返回按鈕推到最左邊 */
+            color: #5a3d2b;
+            text-decoration: none;
+        }
+        .profile-content {
+            display: flex;
+            gap: 50px;
+        }
+        .profile-left {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .profile-right p {
+            line-height: 2.5;
+            font-size: 18px;
+            margin: 10px 0;
+        }
+        /* 模仿你草圖裡的底線設計 */
+        .profile-right span {
+            border-bottom: 1px solid #000;
+            padding: 0 20px;
+            display: inline-block;
+            min-width: 150px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="profile-container">
+        <div class="profile-header">
+            <a href="index.html" class="back-btn">← 返回</a>
+            <h2 style="margin: 0 auto; padding-right: 50px;">個人資訊 🪪</h2>
+        </div>
+
+        <div class="profile-content">
+            <div class="profile-left">
+                <img src="images/user-icon.png" style="width: 120px; height: 120px; border-radius: 5px; border: 2px solid #ccc;">
+                <button style="margin-top: 15px; padding: 5px 10px;">更換大頭貼</button>
+                <button onclick="logoutFromProfile()" style="margin-top: 20px; padding: 5px 10px; background-color: #d9534f; color: white; border: none; border-radius: 3px; cursor: pointer;">登出</button>
+            </div>
+
+            <div class="profile-right">
+                <p>姓名：<span id="profileName"></span></p>
+                <p>生日：<span>未設定</span></p>
+                <p>電話：<span>未設定</span></p>
+                <p>信箱：<span>未設定</span></p>
+                <p>使用網站傾向：<span style="min-width: 200px;">未設定</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 1. 一載入頁面，立刻檢查使用者有沒有登入
+        let user = localStorage.getItem("loginUser");
+        if(!user) {
+            alert("請先登入！");
+            location.href = "index.html"; // 如果沒登入被偷連進來，直接趕回首頁
+        } else {
+            // 有登入就把帳號名稱填入姓名的底線上
+            document.getElementById("profileName").innerText = user;
+        }
+
+        // 2. 專屬這個頁面的登出功能
+        function logoutFromProfile(){
+            localStorage.removeItem("loginUser"); // 清除登入狀態
+            alert("已成功登出");
+            location.href = "index.html"; // 登出後自動跳轉回首頁
+        }
+    </script>
+
+</body>
+</html>
