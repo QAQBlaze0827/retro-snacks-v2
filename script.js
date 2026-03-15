@@ -21,18 +21,48 @@ setInterval(() => {
 // ==========================================
 // 2. 商品彈出視窗功能 (商品介紹)
 // ==========================================
-// 顯示商品詳細資訊的彈出視窗
 function showProduct(name, text, img, price) {
-    document.getElementById("popup").style.display = "block"; // 顯示視窗
-    document.getElementById("pname").innerText = name;        // 填入商品名稱
-    document.getElementById("ptext").innerText = text;        // 填入商品介紹
-    document.getElementById("pimg").src = img;                // 替換商品圖片
-    document.getElementById("pprice").innerText = "價格 $" + price; // 填入價格
+    document.getElementById("popup").style.display = "block";
+    document.getElementById("pname").innerText = name;
+    document.getElementById("ptext").innerText = text;
+    document.getElementById("pimg").src = img;
+    document.getElementById("pprice").innerText = "價格 $" + price;
+
+    // 每次打開視窗時，把數量輸入框重置為 1
+    document.getElementById("popupQty").value = 1;
+
+    // 綁定視窗內的「加入購物車」按鈕點擊事件
+    document.getElementById("popupAddBtn").onclick = function() {
+        let qty = parseInt(document.getElementById("popupQty").value); // 取得輸入的數量
+        let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+        // 根據選擇的數量，把商品塞進購物車陣列
+        for (let i = 0; i < qty; i++) {
+            cart.push({ name: name, price: price });
+        }
+
+        localStorage.setItem("cart", JSON.stringify(cart));
+        updateCartCount(); // 更新右上角購物車數字
+        alert(`${name} 共 ${qty} 份已加入購物車！`);
+        closePopup(); // 加入完成後自動關閉視窗
+    };
 }
 
 // 關閉商品彈出視窗
 function closePopup() {
     document.getElementById("popup").style.display = "none";
+}
+
+// 控制視窗內的數量加減按鈕
+function changeQty(amount) {
+    let qtyInput = document.getElementById("popupQty");
+    let currentQty = parseInt(qtyInput.value);
+    let newQty = currentQty + amount;
+
+    // 防呆：確保數量最少是 1
+    if (newQty >= 1) {
+        qtyInput.value = newQty;
+    }
 }
 
 // ==========================================
