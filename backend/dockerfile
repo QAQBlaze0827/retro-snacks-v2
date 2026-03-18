@@ -1,0 +1,9 @@
+# backend/Dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 3000
+# 開發環境使用 nodemon
+CMD ["npm", "run", "dev"]

@@ -1,0 +1,27 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # 後端伺服器
+  app:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend:/app # 程式碼同步，修改後立即生效
+      - /app/node_modules
+    environment:
+      - MONGODB_URI=mongodb://db:27017/retro_shop
+    depends_on:
+      - db # 確保資料庫先啟動
+
+  # MongoDB 資料庫
+  db:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db # 資料持久化，容器重啟資料還在
+
+volumes:
+  mongo-data:
