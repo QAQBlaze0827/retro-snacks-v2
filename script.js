@@ -188,44 +188,58 @@ function switchLogin() { closeModal(); openLogin(); }
 // 註冊功能 (改為呼叫後端 API)
 async function register() {
     let user = document.getElementById("regUser").value.trim();
+    let email = document.getElementById("regEmail").value.trim();
     let pass = document.getElementById("regPass").value.trim();
 
     // 防呆
-    if(!user || !pass) { alert("請輸入帳號密碼"); return; }
+    if(!user || !email ||  !pass ) { alert("請填寫所有欄位"); return; }
 
     try {
         // 呼叫後端註冊 API
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: user, password: pass })
+            body: JSON.stringify({ username: user, email: email, password: pass })
         });
 
         const data = await response.json();
 
         if (data.success) {
-            alert("註冊成功！請登入");
-            switchLogin(); // 切換到登入視窗
+            // 切換到驗證碼輸入介面
+            document.getElementById("regInitial").style.display = "none";
+            document.getElementById("regVerify").style.display = "block";
         } else {
-            alert("註冊失敗：" + data.message);
+            alert(data.message);
         }
     } catch (error) {
         console.error('Error:', error);
         alert("連線伺服器發生錯誤");
     }
 }
-// 註冊功能
-// function register() {
-//     let user = document.getElementById("regUser").value.trim();
-//     let pass = document.getElementById("regPass").value.trim();
-//     let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
+// 新增驗證函數
+async function verifyCode() {
+    let user = document.getElementById("regUser").value.trim();
+    let code = document.getElementById("verifyCode").value.trim();
 
-//     // 將新帳號密碼存入物件
-//     accounts[user] = { password: pass };
-//     localStorage.setItem("accounts", JSON.stringify(accounts));
-//     alert("註冊成功");
-//     closeModal();
-// }
+    try {
+        const response = await fetch(`${API_URL}/verify`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: user, code: code })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            alert("驗證成功！快去登入吧");
+            location.reload(); // 重新整理頁面
+        } else {
+            alert(data.message);
+        }
+    } catch (error) {
+        alert("驗證失敗");
+    }
+}
 // 登入功能 (改為呼叫後端 API)
 async function login() {
     let user = document.getElementById("loginUser").value.trim();

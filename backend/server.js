@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const nodemailer = require('nodemailer');
 require('dotenv').config();
 
 const app = express();
@@ -26,9 +27,20 @@ mongoose.connect(dbUrl)
 // ==========================================
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true }
+    password: { type: String, required: true },
+    email: { type: String, required: true }, // 新增 Email
+    isVerified: { type: Boolean, default: false }, // 是否驗證成功
+    verificationCode: String, // 存放驗證碼
+    codeExpires: Date // 驗證碼過期時間
 });
-
+// 2. 設定 Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+});
 const User = mongoose.model('User', userSchema);
 
 // ==========================================
@@ -38,29 +50,63 @@ const User = mongoose.model('User', userSchema);
 // [POST] 會員註冊
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password ,email} = req.body;
 
         // 防呆：檢查帳號是否已存在
-        const existingUser = await User.findOne({ username });
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
-            return res.status(400).json({ success: false, message: '帳號已存在' });
+            return res.status(400).json({ success: false, message: '帳號或 Email 已存在' });
         }
 
         // 安全：密碼加密 (Hash)
         const hashedPassword = await bcrypt.hash(password, 10);
+        // 產生驗證碼
+        const code = Math.floor(100000 + Math.random() * 900000).toString(); // 產生 6 位數驗證碼
 
         // 儲存新使用者
         const newUser = new User({
             username,
-            password: hashedPassword
+            password: hashedPassword,
+            email,
+            verificationCode: code,
+            codeExpires: Date.now() + 300000 // 5 分鐘後過期
         });
 
         await newUser.save();
-        res.status(201).json({ success: true, message: '註冊成功' });
+        // 發信
+        await transporter.sendMail({
+            from: `"復古零食店" <${process.env.EMAIL_USER}>`,
+            to: email,
+            subject: '您的註冊驗證碼',
+            text: `哈囉 ${username}！您的驗證碼是：${code}，請於 5 分鐘內輸入。`
+        });
+
+        res.status(201).json({ success: true, message: '驗證碼已寄出' });
 
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// 4. API [POST] 驗證驗證碼
+app.post('/api/verify', async (req, res) => {
+    try {
+        const { username, code } = req.body;
+        const user = await User.findOne({ username });
+
+        if (!user || user.verificationCode !== code || user.codeExpires < Date.now()) {
+            return res.status(400).json({ success: false, message: '驗證碼錯誤或已過期' });
+        }
+
+        user.isVerified = true;
+        user.verificationCode = undefined; // 清空
+        user.codeExpires = undefined;
+        await user.save();
+
+        res.json({ success: true, message: '驗證成功！請重新登入' });
+    } catch (err) {
+        res.status(500).json({ success: false, message: '驗證過程出錯' });
     }
 });
 

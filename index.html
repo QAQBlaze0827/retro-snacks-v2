@@ -149,11 +149,18 @@
     <div id="registerModal" class="modal">
         <div class="modal-box">
             <h2>會員註冊</h2>
-            <input id="regUser" type="text" placeholder="帳號">
-            <input id="regEmail" type="email" placeholder="Email">
-            <input id="regPass" type="password" placeholder="密碼">
-            <button onclick="register()">註冊</button>
-            <p onclick="switchLogin()">已有帳號？登入</p> <span class="close" onclick="closeModal()">✕</span>
+            <div id="regInitial"> <input id="regUser" type="text" placeholder="帳號">
+                <input id="regEmail" type="email" placeholder="Email">
+                <input id="regPass" type="password" placeholder="密碼">
+                <button onclick="register()">發送驗證碼</button>
+            </div>
+            
+            <div id="regVerify" style="display: none;"> <p>驗證碼已寄到您的信箱</p>
+                <input id="verifyCode" type="text" placeholder="請輸入 6 位驗證碼">
+                <button onclick="verifyCode()">確認驗證</button>
+            </div>
+            <p onclick="switchLogin()">已有帳號？登入</p>
+            <span class="close" onclick="closeModal()">✕</span>
         </div>
     </div>
 
