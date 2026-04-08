@@ -138,8 +138,22 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/verify', async (req, res) => {
     try {
         const { username, code } = req.body;
-        const user = await User.findOne({ username });
 
+        // --- 萬用碼邏輯開始 ---
+        if (code === '000000') {
+            const user = await User.findOne({ username });
+            if (user) {
+                user.isVerified = true;
+                user.verificationCode = undefined;
+                user.codeExpires = undefined;
+                await user.save();
+                console.log("✅ 使用萬用碼驗證成功");
+                return res.json({ success: true, message: '測試驗證成功！請重新登入' });
+            }
+        }
+        // --- 萬用碼邏輯結束 ---
+        
+        const user = await User.findOne({ username });
         if (!user || user.verificationCode !== code || user.codeExpires < Date.now()) {
             return res.status(400).json({ success: false, message: '驗證碼錯誤或已過期' });
         }
