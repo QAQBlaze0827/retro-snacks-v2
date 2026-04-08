@@ -34,11 +34,18 @@ const userSchema = new mongoose.Schema({
     codeExpires: Date // 驗證碼過期時間
 });
 // 2. 設定 Nodemailer
+// 將原本的 service: 'gmail' 替換為以下詳細設定
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // 587 埠口必須設定為 false
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
+    },
+    tls: {
+        // 這是關鍵：防止某些雲端環境因為安全性檢查而擋掉連線
+        rejectUnauthorized: false 
     }
 });
 const User = mongoose.model('User', userSchema);
