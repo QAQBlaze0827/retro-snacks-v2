@@ -7,6 +7,8 @@ const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 
