@@ -35,15 +35,22 @@ const userSchema = new mongoose.Schema({
     verificationCode: String, // 存放驗證碼
     codeExpires: Date // 驗證碼過期時間
 });
-// 2. 設定 Nodemailer
+// 2. 更新 transporter
 const transporter = nodemailer.createTransport({
-    service: 'gmail', // 直接用 service 模式
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false, // 587 必須設為 false
+    requireTLS: true, // 強制要求加密連線
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
-    // 設定 10 秒內沒連上就回傳錯誤，不要在那邊死等
-    connectionTimeout: 10000 
+    tls: {
+        // 即使憑證不完全匹配也允許連線，增加相容性
+        rejectUnauthorized: false,
+        minVersion: 'TLSv1.2'
+    },
+    connectionTimeout: 20000 // 把時間拉長到 20 秒，給 Render 一點緩衝
 });
 // 在 transporter 定義完後立刻測試
 transporter.verify(function (error, success) {
