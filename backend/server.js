@@ -95,20 +95,35 @@ app.post('/api/register', async (req, res) => {
         await newUser.save();
         //測試
         console.log("資料庫存入成功");
-        // 強力捕獲寄信錯誤
+        // // 強力捕獲寄信錯誤
+        // try {
+        //     await transporter.sendMail({
+        //         from: `"復古零食店" <${process.env.EMAIL_USER}>`,
+        //         to: email,
+        //         subject: '您的註冊驗證碼',
+        //         text: `驗證碼是：${code}`
+        //     });
+        //     console.log("✅ 郵件寄出成功");
+        //     return res.status(201).json({ success: true });
+        // } catch (mailErr) {
+        //     console.error("❌ 寄信失敗:", mailErr.message);
+        //     // 就算寄信失敗，也要回傳 JSON 給前端，前端才不會跳「連線伺服器發生錯誤」
+        //     return res.status(500).json({ success: false, message: "郵件系統連線失敗: " + mailErr.message });
+        // }
+        // 2. 修改發信那一段
         try {
-            await transporter.sendMail({
-                from: `"復古零食店" <${process.env.EMAIL_USER}>`,
-                to: email,
+            const data = await resend.emails.send({
+                from: 'onboarding@resend.dev', // 測試期請先用這個官方預設發信人
+                to: email, // 你的接收信箱
                 subject: '您的註冊驗證碼',
-                text: `驗證碼是：${code}`
+                html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1><br>請於 5 分鐘內輸入。`
             });
-            console.log("✅ 郵件寄出成功");
+
+            console.log("🚀 Resend 寄信成功:", data);
             return res.status(201).json({ success: true });
         } catch (mailErr) {
-            console.error("❌ 寄信失敗:", mailErr.message);
-            // 就算寄信失敗，也要回傳 JSON 給前端，前端才不會跳「連線伺服器發生錯誤」
-            return res.status(500).json({ success: false, message: "郵件系統連線失敗: " + mailErr.message });
+            console.error("❌ Resend 寄信失敗:", mailErr);
+            return res.status(500).json({ success: false, message: "郵件系統繁忙，請稍後再試" });
         }
 
     } catch (err) {
