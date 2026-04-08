@@ -140,6 +140,24 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// [GET] 取得特定使用者資料
+app.get('/api/user/:username', async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username });
+        if (!user) {
+            return res.status(404).json({ success: false, message: '找不到使用者' });
+        }
+        // 只回傳需要的資料，不要把密碼傳回去
+        res.json({ 
+            success: true, 
+            email: user.email || "未設定",
+            username: user.username
+        });
+    } catch (err) {
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
 // 啟動伺服器
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

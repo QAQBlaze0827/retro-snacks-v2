@@ -73,28 +73,51 @@
                 <p>姓名：<span id="profileName"></span></p>
                 <p>生日：<span>未設定</span></p>
                 <p>電話：<span>未設定</span></p>
-                <p>信箱：<span>早安</span></p>
+                <p>信箱：<span id="profileEmail">載入中...</span></p>
                 <p>使用網站傾向：<span style="min-width: 200px;">未設定</span></p>
             </div>
         </div>
     </div>
 
     <script>
-        // 1. 一載入頁面，立刻檢查使用者有沒有登入
+        // 這裡也要定義 API 網址，記得測試完要改成 Render 的
+        const API_URL = 'https://retro-snacks-v2.onrender.com/api'; 
+        // 測試
+        // const API_URL = 'http://localhost:3000/api'; // 指向你的 Docker 後端
         let user = localStorage.getItem("loginUser");
+
         if(!user) {
             alert("請先登入！");
-            location.href = "index.html"; // 如果沒登入被偷連進來，直接趕回首頁
+            location.href = "index.html";
         } else {
-            // 有登入就把帳號名稱填入姓名的底線上
+            // 1. 先顯示本機已知的姓名
             document.getElementById("profileName").innerText = user;
+            
+            // 2. 去後端抓完整的資料 (例如信箱)
+            fetchUserInfo(user);
         }
 
-        // 2. 專屬這個頁面的登出功能
+        async function fetchUserInfo(username) {
+            try {
+                const response = await fetch(`${API_URL}/user/${username}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    // 把抓到的信箱填進去
+                    document.getElementById("profileEmail").innerText = data.email;
+                } else {
+                    document.getElementById("profileEmail").innerText = "抓取失敗";
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                document.getElementById("profileEmail").innerText = "連線錯誤";
+            }
+        }
+
         function logoutFromProfile(){
-            localStorage.removeItem("loginUser"); // 清除登入狀態
+            localStorage.removeItem("loginUser");
             alert("已成功登出");
-            location.href = "index.html"; // 登出後自動跳轉回首頁
+            location.href = "index.html";
         }
     </script>
 
