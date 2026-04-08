@@ -1,7 +1,7 @@
 // 後端 API 的基礎網址 (Docker 開發環境)
-const API_URL = 'https://retro-snacks-v2.onrender.com/api';
+// const API_URL = 'https://retro-snacks-v2.onrender.com/api';
 // 測試
-// const API_URL = 'http://localhost:3000/api'; // 指向你的 Docker 後端
+const API_URL = 'http://localhost:3000/api'; // 指向你的 Docker 後端
 // ==========================================
 // 1. 首頁 Banner 輪播圖設定
 // ==========================================

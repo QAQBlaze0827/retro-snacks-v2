@@ -1,11 +1,12 @@
 // backend/server.js
+require('dns').setDefaultResultOrder('ipv4first');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
-require('dns').setDefaultResultOrder('ipv4first');
+
 
 const app = express();
 
@@ -35,15 +36,22 @@ const userSchema = new mongoose.Schema({
     codeExpires: Date // 驗證碼過期時間
 });
 // 2. 設定 Nodemailer
-// 將原本的 service: 'gmail' 替換為以下詳細設定
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true, // 465 埠口必須為 true
+    service: 'gmail', // 直接用 service 模式
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    }
+    },
+    // 設定 10 秒內沒連上就回傳錯誤，不要在那邊死等
+    connectionTimeout: 10000 
+});
+// 在 transporter 定義完後立刻測試
+transporter.verify(function (error, success) {
+    if (error) {
+        console.log("❌ 郵件伺服器連線失敗:", error);
+    } else {
+        console.log("✅ 郵件伺服器已就緒，可以發信");
+    }
 });
 const User = mongoose.model('User', userSchema);
 
