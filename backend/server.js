@@ -5,6 +5,7 @@ const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
+require('dns').setDefaultResultOrder('ipv4first');
 
 const app = express();
 
@@ -37,15 +38,11 @@ const userSchema = new mongoose.Schema({
 // 將原本的 service: 'gmail' 替換為以下詳細設定
 const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // 587 埠口必須設定為 false
+    port: 465,
+    secure: true, // 465 埠口必須為 true
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        // 這是關鍵：防止某些雲端環境因為安全性檢查而擋掉連線
-        rejectUnauthorized: false 
     }
 });
 const User = mongoose.model('User', userSchema);
@@ -58,7 +55,8 @@ const User = mongoose.model('User', userSchema);
 app.post('/api/register', async (req, res) => {
     try {
         const { username, password ,email} = req.body;
-
+        // 這裡可以加一行 log 看看有沒有成功收到請求
+        console.log("收到註冊請求:", username, email);
         // 防呆：檢查帳號是否已存在
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
@@ -80,15 +78,23 @@ app.post('/api/register', async (req, res) => {
         });
 
         await newUser.save();
-        // 發信
-        await transporter.sendMail({
-            from: `"復古零食店" <${process.env.EMAIL_USER}>`,
-            to: email,
-            subject: '您的註冊驗證碼',
-            text: `哈囉 ${username}！您的驗證碼是：${code}，請於 5 分鐘內輸入。`
-        });
-
-        res.status(201).json({ success: true, message: '驗證碼已寄出' });
+        //測試
+        console.log("資料庫存入成功");
+        // 強力捕獲寄信錯誤
+        try {
+            await transporter.sendMail({
+                from: `"復古零食店" <${process.env.EMAIL_USER}>`,
+                to: email,
+                subject: '您的註冊驗證碼',
+                text: `驗證碼是：${code}`
+            });
+            console.log("✅ 郵件寄出成功");
+            return res.status(201).json({ success: true });
+        } catch (mailErr) {
+            console.error("❌ 寄信失敗:", mailErr.message);
+            // 就算寄信失敗，也要回傳 JSON 給前端，前端才不會跳「連線伺服器發生錯誤」
+            return res.status(500).json({ success: false, message: "郵件系統連線失敗: " + mailErr.message });
+        }
 
     } catch (err) {
         console.error(err);
