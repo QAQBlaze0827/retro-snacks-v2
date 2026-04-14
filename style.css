@@ -14,7 +14,10 @@ padding:12px;
 background:#6b3e2e;
 border-radius:0 0 20px 20px;
 }
-
+/* header 右邊的登入按鈕 */
+#loginBtn{
+    margin-right:10px;
+}
 /* logo */
 
 .logo{
@@ -45,8 +48,13 @@ border-radius:12px;
 overflow:hidden;
 }
 
-.menu:hover .dropdown{
-display:block;
+/* 1. 把這段刪掉 */
+/* .menu:hover .dropdown { display: block; } */
+
+/* 2. 增加這個類別 */
+.dropdown.show {
+    display: block;
+    z-index: 1000; /* 確保下拉選單不會被後面的圖片擋住 */
 }
 
 .dropdown div{

@@ -9,8 +9,8 @@
 <body>
 
     <header>
-        <div class="menu">☰
-            <div class="dropdown">
+        <div class="menu" onclick="toggleDropdown(event)">☰
+            <div class="dropdown" id="myDropdown">
                 <div onclick="filterCategory('all')">全部商品</div>
                 <div onclick="filterCategory('candy')">糖果</div>
                 <div onclick="filterCategory('cookie')">餅乾</div>

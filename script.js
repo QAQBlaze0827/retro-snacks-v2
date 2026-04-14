@@ -51,6 +51,21 @@ function showProduct(name, text, img, price) {
         closePopup(); // 加入完成後自動關閉視窗
     };
 }
+// 控制下拉選單的顯示與隱藏
+function toggleDropdown(event) {
+    // 阻止事件冒泡（防止點擊選單時觸發下方的 window.onclick）
+    event.stopPropagation();
+    const dropdown = document.getElementById("myDropdown");
+    dropdown.classList.toggle("show");
+}
+
+// 點擊網頁其他地方時，自動關閉選單
+window.onclick = function(event) {
+    const dropdown = document.getElementById("myDropdown");
+    if (dropdown && dropdown.classList.contains('show')) {
+        dropdown.classList.remove('show');
+    }
+}
 
 // 關閉商品彈出視窗
 function closePopup() {
