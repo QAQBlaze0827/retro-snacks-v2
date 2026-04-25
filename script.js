@@ -278,7 +278,7 @@ async function login() {
             localStorage.setItem("loginUser", data.user.username);
             showUser(); // 更新頁面 UI
             closeModal();
-            alert("登入成功！欢迎回來");
+            alert("登入成功！歡迎回來");
         } else {
             alert("登入失敗：" + data.message);
         }

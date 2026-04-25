@@ -5,52 +5,91 @@
     <title>個人資訊 - 復古零食店</title>
     <link rel="stylesheet" href="style.css"> 
     <style>
-        /* 針對個人資訊頁面稍微寫一點排版 */
         body {
-            background-color: #3b2f2f; /* 讓背景有點顏色，突顯白色卡片 */
+            background-color: #3b2f2f;
+            color: #fff;
+            font-family: "微軟正黑體";
         }
         .profile-container {
-            max-width: 600px;
+            max-width: 650px;
             margin: 50px auto;
             background: #cf9a69;
             padding: 30px;
             border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            color: #000; /* 文字改為黑色，在淺棕色背景上較清晰 */
         }
         .profile-header {
             display: flex;
             align-items: center;
-            border-bottom: 2px solid #5a3d2b; /* 配合你原本的深咖啡色 */
+            border-bottom: 2px solid #5a3d2b;
             padding-bottom: 10px;
             margin-bottom: 30px;
         }
         .back-btn {
             cursor: pointer;
-            font-size: 20px;
-            margin-right: auto; /* 把返回按鈕推到最左邊 */
+            font-size: 18px;
             color: #5a3d2b;
             text-decoration: none;
+            font-weight: bold;
         }
         .profile-content {
             display: flex;
-            gap: 50px;
+            gap: 40px;
         }
         .profile-left {
+            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-        .profile-right p {
-            line-height: 2.5;
-            font-size: 18px;
-            margin: 10px 0;
+        .profile-right {
+            flex: 2;
         }
-        /* 模仿你草圖裡的底線設計 */
-        .profile-right span {
-            border-bottom: 1px solid #000;
-            padding: 0 20px;
-            display: inline-block;
-            min-width: 150px;
+        .profile-right div {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+        .profile-right label {
+            width: 120px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        /* 統一底線輸入框設計 */
+        .profile-right span, .profile-right input, .profile-right select {
+            border: none;
+            border-bottom: 1px solid #5a3d2b;
+            background: transparent;
+            padding: 5px 10px;
+            font-size: 16px;
+            width: 200px;
+            outline: none;
+        }
+        .profile-right input:focus {
+            border-bottom: 2px solid #000;
+        }
+        .save-btn {
+            margin-top: 20px;
+            width: 100%;
+            padding: 12px;
+            background-color: #5a3d2b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        .save-btn:hover { background-color: #3e2a1e; }
+        
+        .logout-btn {
+            margin-top: 20px;
+            padding: 8px 15px;
+            background-color: #d9534f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
         }
     </style>
 </head>
@@ -64,53 +103,109 @@
 
         <div class="profile-content">
             <div class="profile-left">
-                <img src="images/user-icon.png" style="width: 120px; height: 120px; border-radius: 5px; border: 2px solid #ccc;">
-                <button style="margin-top: 15px; padding: 5px 10px;">更換大頭貼</button>
-                <button onclick="logoutFromProfile()" style="margin-top: 20px; padding: 5px 10px; background-color: #d9534f; color: white; border: none; border-radius: 3px; cursor: pointer;">登出</button>
+                <img id="userAvatar" src="images/user-icon.png" style="width: 150px; height: 150px; border-radius: 10px; border: 3px solid #5a3d2b; object-fit: cover;">
+                <button style="margin-top: 15px; padding: 5px 10px; cursor: pointer;">更換大頭貼</button>
+                <button onclick="logoutFromProfile()" class="logout-btn">登出帳號</button>
             </div>
 
             <div class="profile-right">
-                <p>姓名：<span id="profileName"></span></p>
-                <p>生日：<span>未設定</span></p>
-                <p>電話：<span>未設定</span></p>
-                <p>信箱：<span id="profileEmail">載入中...</span></p>
-                <p>使用網站傾向：<span style="min-width: 200px;">未設定</span></p>
+                <div>
+                    <label>姓名：</label>
+                    <span id="profileName">載入中...</span>
+                </div>
+                <div>
+                    <label>信箱：</label>
+                    <span id="profileEmail">載入中...</span>
+                </div>
+                <div>
+                    <label>生日：</label>
+                    <input type="date" id="editBirthday">
+                </div>
+                <div>
+                    <label>電話：</label>
+                    <input type="text" id="editPhone" placeholder="尚未設定電話">
+                </div>
+                <div>
+                    <label>網站傾向：</label>
+                    <select id="editPreference">
+                        <option value="">未設定</option>
+                        <option value="糖果">偏好糖果</option>
+                        <option value="餅乾">偏好餅乾</option>
+                        <option value="飲料">偏好飲料</option>
+                    </select>
+                </div>
+
+                <button onclick="saveProfile()" class="save-btn">💾 儲存修改</button>
             </div>
         </div>
     </div>
 
     <script>
-        // 這裡也要定義 API 網址，記得測試完要改成 Render 的
+        // 設定 API 網址
         const API_URL = 'https://retro-snacks-v2.onrender.com/api'; 
-        // 測試
-        // const API_URL = 'http://localhost:3000/api'; // 指向你的 Docker 後端
-        let user = localStorage.getItem("loginUser");
+        let username = localStorage.getItem("loginUser");
 
-        if(!user) {
+        // 一進頁面先檢查登入狀態
+        if(!username) {
             alert("請先登入！");
             location.href = "index.html";
         } else {
-            // 1. 先顯示本機已知的姓名
-            document.getElementById("profileName").innerText = user;
-            
-            // 2. 去後端抓完整的資料 (例如信箱)
-            fetchUserInfo(user);
+            // 初始化：抓取完整資料
+            fetchUserInfo(username);
         }
 
-        async function fetchUserInfo(username) {
+        // 【整合功能：抓取所有資料並填入畫面】
+        async function fetchUserInfo(user) {
             try {
-                const response = await fetch(`${API_URL}/user/${username}`);
+                const response = await fetch(`${API_URL}/user/${user}`);
                 const data = await response.json();
 
                 if (data.success) {
-                    // 把抓到的信箱填進去
+                    // 填入不需要修改的固定資料
+                    document.getElementById("profileName").innerText = data.username;
                     document.getElementById("profileEmail").innerText = data.email;
+
+                    // 填入可以修改的 input 資料 (若資料庫沒資料則維持空白)
+                    document.getElementById("editBirthday").value = data.birthday || "";
+                    document.getElementById("editPhone").value = data.phone || "";
+                    document.getElementById("editPreference").value = data.preference || "";
                 } else {
-                    document.getElementById("profileEmail").innerText = "抓取失敗";
+                    alert("資料抓取失敗！");
                 }
             } catch (error) {
                 console.error("Error:", error);
-                document.getElementById("profileEmail").innerText = "連線錯誤";
+                document.getElementById("profileEmail").innerText = "連線失敗";
+            }
+        }
+
+        // 【新功能：儲存修改資料】
+        async function saveProfile() {
+            const birthday = document.getElementById("editBirthday").value;
+            const phone = document.getElementById("editPhone").value.trim();
+            const preference = document.getElementById("editPreference").value;
+
+            try {
+                const response = await fetch(`${API_URL}/user/update`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        birthday: birthday,
+                        phone: phone,
+                        preference: preference
+                    })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert("✅ 個人資訊更新成功！");
+                    fetchUserInfo(username); // 重新載入，確保顯示最新狀態
+                } else {
+                    alert("❌ 更新失敗：" + data.message);
+                }
+            } catch (error) {
+                console.error("Save Error:", error);
+                alert("伺服器連線失敗，請稍後再試");
             }
         }
 
@@ -120,6 +215,5 @@
             location.href = "index.html";
         }
     </script>
-
 </body>
 </html>

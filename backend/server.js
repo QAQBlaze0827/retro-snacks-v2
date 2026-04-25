@@ -33,6 +33,9 @@ const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
     email: { type: String, required: true }, // 新增 Email
+    birthday: { type: String, default: "" },      // 生日
+    phone: { type: String, default: "" },         // 電話
+    preference: { type: String, default: "" },    // 網站傾向我也不知道這功能到底要幹嘛
     isVerified: { type: Boolean, default: false }, // 是否驗證成功
     verificationCode: String, // 存放驗證碼
     codeExpires: Date // 驗證碼過期時間
@@ -209,11 +212,41 @@ app.get('/api/user/:username', async (req, res) => {
         // 只回傳需要的資料，不要把密碼傳回去
         res.json({ 
             success: true, 
+            username: user.username,
             email: user.email || "未設定",
-            username: user.username
+            birthday: user.birthday || "",      // 新增回傳生日
+            phone: user.phone || "",            // 新增回傳電話
+            preference: user.preference || ""   // 新增回傳傾向
         });
     } catch (err) {
         res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// [PUT] 更新使用者詳細資料
+app.put('/api/user/update', async (req, res) => {
+    try {
+        const { username, birthday, phone, preference } = req.body;
+        
+        // 根據帳號尋找並更新資料
+        const updatedUser = await User.findOneAndUpdate(
+            { username: username },
+            { 
+                birthday: birthday, 
+                phone: phone,
+                preference: preference 
+            },
+            { new: true } // 回傳更新之後的最新資料
+        );
+
+        if (!updatedUser) {
+            return res.status(404).json({ success: false, message: "找不到該使用者" });
+        }
+
+        res.json({ success: true, message: "資料更新成功", user: updatedUser });
+    } catch (err) {
+        console.error("更新失敗:", err);
+        res.status(500).json({ success: false, message: "伺服器錯誤" });
     }
 });
 
