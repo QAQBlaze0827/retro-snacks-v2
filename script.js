@@ -1,65 +1,122 @@
-// 後端 API 的基礎網址 (Docker 開發環境)
-const API_URL = 'https://retro-snacks-v2.onrender.com/api';
-// 測試
-// const API_URL = 'http://localhost:3000/api'; // 指向你的 Docker 後端
 // ==========================================
-// 1. 首頁 Banner 輪播圖設定
+// 1. 基本設定與初始化
 // ==========================================
-// 定義要輪播的圖片路徑陣列
-let images = [
-    "images/banner1.jpg",
-    "images/banner2.jpg",
-    "images/banner3.jpg"
-];
-let index = 0; // 目前顯示的圖片索引值
+// 後端 API 的網址 (請確保這是你 Render 的最新網址)
+// 自動判斷環境：如果是 localhost 就是開發環境，否則就是 Render 正式環境
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    ? 'http://localhost:3000/api'               // 本地開發用
+    : 'https://retro-snacks-v2.onrender.com/api'; // Render 正式用
 
-// 設定計時器，每 3000 毫秒（3 秒）更換一次圖片
+console.log("當前連線的 API 網址是:", API_URL);
+
+// 當網頁一打開時，要做的事情
+window.onload = function() {
+    fetchProducts();    // 1. 去資料庫抓商品
+    showUser();         // 2. 檢查有沒有登入，更新右上角
+    updateCartCount();  // 3. 更新購物車圖示數字
+};
+
+// ==========================================
+// 2. 首頁 Banner 輪播圖
+// ==========================================
+let images = ["images/banner1.jpg", "images/banner2.jpg", "images/banner3.jpg"];
+let index = 0;
 setInterval(() => {
     index++;
-    // 如果索引值超過陣列長度，就歸零回到第一張
-    if (index >= images.length) { index = 0; }
-    // 更新 HTML 中 id="slide" 的圖片來源
-    document.getElementById("slide").src = images[index];
-}, 3000);
+    if (index >= images.length) index = 0;
+    const slide = document.getElementById("slide");
+    if (slide) slide.src = images[index];
+}, 3000); // 3秒換一張
 
 // ==========================================
-// 2. 商品彈出視窗功能 (商品介紹)
+// 3. 商品讀取與顯示 (動態從資料庫抓取)
 // ==========================================
-function showProduct(name, text, img, price) {
-    document.getElementById("popup").style.display = "block";
-    document.getElementById("pname").innerText = name;
-    document.getElementById("ptext").innerText = text;
-    document.getElementById("pimg").src = img;
-    document.getElementById("pprice").innerText = "價格 $" + price;
+async function fetchProducts() {
+    try {
+        const response = await fetch(`${API_URL}/products`);
+        const products = await response.json();
+        renderProducts(products); // 抓到資料後，把它畫在畫面上
+    } catch (err) {
+        console.error("抓取商品失敗:", err);
+    }
+}
 
-    // 每次打開視窗時，把數量輸入框重置為 1
-    document.getElementById("popupQty").value = 1;
+// 把抓到的商品陣列，變成一張張卡片 HTML
+function renderProducts(products) {
+    const container = document.getElementById('productContainer');
+    if (!container) return;
+    container.innerHTML = ''; // 清空原本的「載入中」文字
 
-    // 綁定視窗內的「加入購物車」按鈕點擊事件
+    products.forEach(p => {
+        const card = document.createElement('div');
+        // 加入分類 class (例如 card candy)，方便篩選
+        card.className = `card ${p.category}`; 
+        // 存入 data-name 方便搜尋
+        card.dataset.name = p.name; 
+
+        card.innerHTML = `
+            <img src="${p.image}">
+            <h3>${p.name}</h3>
+            <p>$${p.price}</p>
+            <button onclick='showProduct(${JSON.stringify(p)})'>商品介紹</button>
+        `;
+        container.appendChild(card);
+    });
+}
+
+// ==========================================
+// 4. 商品介紹彈窗 (處理口味、數量)
+// ==========================================
+function showProduct(product) {
+    // 填入基本資料
+    document.getElementById("pname").innerText = product.name;
+    document.getElementById("ptext").innerText = product.description || "經典懷舊滋味";
+    document.getElementById("pimg").src = product.image;
+    document.getElementById("pprice").innerText = "價格 $" + product.price;
+    document.getElementById("popupQty").value = 1; // 數量重置為 1
+
+    // 處理「口味/規格」下拉選單
+    const optionSection = document.getElementById("optionSection");
+    const optionSelect = document.getElementById("productOption");
+
+    if (product.options && product.options.length > 0) {
+        optionSection.style.display = "block"; // 顯示選單
+        optionSelect.innerHTML = product.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+    } else {
+        optionSection.style.display = "none";  // 沒有口味就隱藏
+    }
+
+    document.getElementById("popup").style.display = "block"; // 顯示彈窗
+
+    // 綁定「加入購物車」按鈕點擊事件
     document.getElementById("popupAddBtn").onclick = function() {
-        let qty = parseInt(document.getElementById("popupQty").value); // 取得輸入的數量
-        let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-        // 根據選擇的數量，把商品塞進購物車陣列
-        for (let i = 0; i < qty; i++) {
-            cart.push({ name: name, price: price });
-        }
-
-        localStorage.setItem("cart", JSON.stringify(cart));
-        updateCartCount(); // 更新右上角購物車數字
-        alert(`${name} 共 ${qty} 份已加入購物車！`);
-        closePopup(); // 加入完成後自動關閉視窗
+        let qty = parseInt(document.getElementById("popupQty").value);
+        let selectedOption = optionSection.style.display === "block" ? optionSelect.value : "";
+        addToCart(product.name, product.price, qty, selectedOption);
+        closePopup();
     };
 }
-// 控制下拉選單的顯示與隱藏
-function toggleDropdown(event) {
-    // 阻止事件冒泡（防止點擊選單時觸發下方的 window.onclick）
-    event.stopPropagation();
-    const dropdown = document.getElementById("myDropdown");
-    dropdown.classList.toggle("show");
+
+function closePopup() {
+    document.getElementById("popup").style.display = "none";
 }
 
-// 點擊網頁其他地方時，自動關閉選單
+// 彈窗內的數量按鈕 (+/-)
+function changeQty(amount) {
+    let qtyInput = document.getElementById("popupQty");
+    let newQty = parseInt(qtyInput.value) + amount;
+    if (newQty >= 1) qtyInput.value = newQty;
+}
+
+// ==========================================
+// 5. 分類篩選與搜尋
+// ==========================================
+function toggleDropdown(event) {
+    event.stopPropagation();
+    document.getElementById("myDropdown").classList.toggle("show");
+}
+
+// 點擊外面自動關閉下拉選單
 window.onclick = function(event) {
     const dropdown = document.getElementById("myDropdown");
     if (dropdown && dropdown.classList.contains('show')) {
@@ -67,126 +124,97 @@ window.onclick = function(event) {
     }
 }
 
-// 關閉商品彈出視窗
-function closePopup() {
-    document.getElementById("popup").style.display = "none";
-}
-
-// 控制視窗內的數量加減按鈕
-function changeQty(amount) {
-    let qtyInput = document.getElementById("popupQty");
-    let currentQty = parseInt(qtyInput.value);
-    let newQty = currentQty + amount;
-
-    // 防呆：確保數量最少是 1
-    if (newQty >= 1) {
-        qtyInput.value = newQty;
-    }
-}
-
-// ==========================================
-// 3. 商品分類與搜尋功能
-// ==========================================
-// 根據分類按鈕過濾商品
 function filterCategory(type) {
-    let cards = document.querySelectorAll(".card"); // 抓取所有商品卡片
-    cards.forEach(card => {
-        if (type === "all") {
-            card.style.display = "block"; // 選擇「全部」就顯示所有卡片
-        } else if (card.classList.contains(type)) {
-            card.style.display = "block"; // 包含該分類 class 的就顯示
-        } else {
-            card.style.display = "none";  // 不包含的就隱藏
-        }
-    });
-}
-
-// 搜尋商品功能 (透過輸入框文字即時篩選)
-function searchProduct() {
-    let input = document.getElementById("searchInput").value.toLowerCase(); // 取得輸入值並轉小寫
     let cards = document.querySelectorAll(".card");
     cards.forEach(card => {
-        // 假設你的 HTML 商品卡片上有 data-name 屬性 (雖然你目前的 HTML 沒加上，但原本設計應該有)
-        let name = card.dataset.name ? card.dataset.name.toLowerCase() : "";
-        if (name.includes(input)) {
-            card.style.display = "block"; // 包含搜尋字詞的顯示
+        if (type === "all" || card.classList.contains(type)) {
+            card.style.display = "block";
         } else {
-            card.style.display = "none";  // 不包含的隱藏
+            card.style.display = "none";
         }
     });
 }
 
-// ==========================================
-// 4. 購物車核心功能
-// ==========================================
-// 將商品加入購物車
-function addToCart(name, price) {
-    // 從 localStorage 讀取購物車資料，如果沒有就建立空陣列
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.push({ name, price }); // 將新商品推入陣列
-    // 將更新後的陣列轉回字串存回 localStorage
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount(); // 更新右上角購物車數量顯示
-    alert(name + " 已加入購物車");
+function searchProduct() {
+    let input = document.getElementById("searchInput").value.toLowerCase();
+    let cards = document.querySelectorAll(".card");
+    cards.forEach(card => {
+        let name = card.dataset.name ? card.dataset.name.toLowerCase() : "";
+        card.style.display = name.includes(input) ? "block" : "none";
+    });
 }
 
-// 更新購物車圖示旁邊的數量數字 (已加入防呆機制)
+// ==========================================
+// 6. 購物車系統 (儲存在 localStorage)
+// ==========================================
+function addToCart(name, price, qty, option) {
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    
+    // 把選擇的商品資訊存進去
+    cart.push({ 
+        name: name, 
+        price: price, 
+        quantity: qty, 
+        option: option // 口味
+    });
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+    updateCartCount();
+    alert(`已加入購物車：${name} ${option} x ${qty}`);
+}
+
 function updateCartCount() {
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let countElement = document.getElementById("cartCount");
-    // 檢查是否有找到 cartCount 標籤 (避免在首頁隱藏時發生錯誤)
-    if (countElement) {
-        countElement.innerText = cart.length;
-    }
+    // 因為你是用圖片當按鈕，建議在 HTML 購物車圖片旁邊加一個 <span id="cartCount"></span>
+    if (countElement) countElement.innerText = cart.length;
 }
 
-// 打開購物車視窗並渲染內容
 function openCart() {
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let html = "";
     let total = 0;
 
-    // 迴圈處理購物車內的每一項商品
     cart.forEach((item, i) => {
         html += `
-            <p>
-            ${item.name} - $${item.price}
-            <button onclick="removeItem(${i})">刪除</button>
+            <p style="color: black; border-bottom: 1px solid #ddd; padding: 10px 0;">
+                ${item.name} ${item.option ? '('+item.option+')' : ''} - $${item.price} x ${item.quantity}
+                <button onclick="removeItem(${i})" style="float: right; background: #d9534f; padding: 2px 8px;">刪除</button>
             </p>
         `;
-        total += item.price; // 累加總金額
+        total += (item.price * item.quantity);
     });
 
-    // 將產生的 HTML 塞入購物車清單區塊
-    document.getElementById("cartItems").innerHTML = html;
+    document.getElementById("cartItems").innerHTML = html || "<p style='color:black;'>購物車是空的</p>";
     document.getElementById("cartTotal").innerText = "總金額 $" + total;
-    document.getElementById("cartModal").style.display = "block"; // 顯示購物車視窗
+    document.getElementById("cartModal").style.display = "block";
 }
 
-// 關閉購物車視窗
 function closeCart() {
     document.getElementById("cartModal").style.display = "none";
 }
 
-// 從購物車中移除單一商品
 function removeItem(i) {
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.splice(i, 1); // 根據索引值刪除該項商品
-    localStorage.setItem("cart", JSON.stringify(cart)); // 存回 localStorage
-    openCart();        // 重新渲染購物車畫面
-    updateCartCount(); // 更新右上角數字
+    cart.splice(i, 1);
+    localStorage.setItem("cart", JSON.stringify(cart));
+    openCart();
+    updateCartCount();
 }
 
-// 結帳功能
 function checkout() {
-    alert("結帳成功！");
-    localStorage.removeItem("cart"); // 清空購物車資料
-    updateCartCount(); // 歸零右上角數字
-    closeCart();       // 關閉購物車視窗
+    if(JSON.parse(localStorage.getItem("cart")).length === 0) {
+        alert("購物車是空的喔！");
+        return;
+    }
+    alert("感謝您的購買！(此為 Demo，未串接金流)");
+    localStorage.removeItem("cart");
+    updateCartCount();
+    closeCart();
 }
 
 // ==========================================
-// 5. 登入與註冊 Modal (彈出視窗) 控制
+// 7. 會員登入註冊 (對接後端 API)
 // ==========================================
 function openLogin() { document.getElementById("loginModal").style.display = "block"; }
 function openRegister() { document.getElementById("registerModal").style.display = "block"; }
@@ -194,155 +222,88 @@ function closeModal() {
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("registerModal").style.display = "none";
 }
-// 註冊/登入視窗互相切換
 function switchRegister() { closeModal(); openRegister(); }
 function switchLogin() { closeModal(); openLogin(); }
 
-// ==========================================
-// 6. 會員註冊與登入邏輯 (使用 localStorage 模擬資料庫)
-// ==========================================
-// 註冊功能 (改為呼叫後端 API)
 async function register() {
     let user = document.getElementById("regUser").value.trim();
     let email = document.getElementById("regEmail").value.trim();
     let pass = document.getElementById("regPass").value.trim();
 
-    // 防呆
-    if(!user || !email ||  !pass ) { alert("請填寫所有欄位"); return; }
+    if(!user || !email || !pass) { alert("請填寫所有欄位"); return; }
 
     try {
-        // 呼叫後端註冊 API
         const response = await fetch(`${API_URL}/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, email: email, password: pass })
         });
-
         const data = await response.json();
-
         if (data.success) {
-            // 切換到驗證碼輸入介面
             document.getElementById("regInitial").style.display = "none";
             document.getElementById("regVerify").style.display = "block";
         } else {
             alert(data.message);
         }
-    } catch (error) {
-        console.error('Error:', error);
-        alert("連線伺服器發生錯誤");
-    }
+    } catch (err) { alert("伺服器連線失敗"); }
 }
-// 新增驗證函數
+
 async function verifyCode() {
     let user = document.getElementById("regUser").value.trim();
     let code = document.getElementById("verifyCode").value.trim();
-
     try {
         const response = await fetch(`${API_URL}/verify`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, code: code })
         });
-
         const data = await response.json();
-
         if (data.success) {
-            alert("驗證成功！快去登入吧");
-            location.reload(); // 重新整理頁面
-        } else {
-            alert(data.message);
-        }
-    } catch (error) {
-        alert("驗證失敗");
-    }
+            alert("驗證成功！請登入");
+            location.reload();
+        } else { alert(data.message); }
+    } catch (err) { alert("驗證失敗"); }
 }
-// 登入功能 (改為呼叫後端 API)
+
 async function login() {
     let user = document.getElementById("loginUser").value.trim();
     let pass = document.getElementById("loginPass").value.trim();
 
-    if(!user || !pass) { alert("請輸入帳號密碼"); return; }
-
     try {
-        // 呼叫後端登入 API
         const response = await fetch(`${API_URL}/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: user, password: pass })
         });
-
         const data = await response.json();
-
         if (data.success) {
-            // 登入成功：將使用者名稱存入 localStorage (維持登入狀態)
             localStorage.setItem("loginUser", data.user.username);
-            showUser(); // 更新頁面 UI
-            closeModal();
-            alert("登入成功！歡迎回來");
-        } else {
-            alert("登入失敗：" + data.message);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert("連線伺服器發生錯誤");
-    }
+            alert("登入成功！");
+            location.reload(); // 重新整理來顯示頭像
+        } else { alert("失敗：" + data.message); }
+    } catch (err) { alert("連線錯誤"); }
 }
-// 登入功能
-// function login() {
-//     let user = document.getElementById("loginUser").value.trim();
-//     let pass = document.getElementById("loginPass").value.trim();
-//     let accounts = JSON.parse(localStorage.getItem("accounts")) || {};
 
-//     // 檢查帳號是否存在
-//     if (!accounts[user]) {
-//         alert("帳號不存在");
-//         return;
-//     }
-//     // 檢查密碼是否正確
-//     if (accounts[user].password !== pass) {
-//         alert("密碼錯誤");
-//         return;
-//     }
-
-//     // 登入成功，將使用者名稱存入 loginUser
-//     localStorage.setItem("loginUser", user);
-//     showUser(); // 更新頁面右上角的使用者狀態
-//     closeModal();
-// }
-
-// ==========================================
-// 7. 頁面狀態更新與初始化
-// ==========================================
-// 根據登入狀態，更新右上角 UI (顯示大頭貼或登入按鈕)
+// 根據登入狀態切換右上角按鈕
 function showUser() {
     let user = localStorage.getItem("loginUser");
     let loginBtn = document.getElementById("loginBtn");
     let regBtn = document.getElementById("regBtn");
-    let cartBtn = document.getElementById("cartBtn"); // 抓取購物車按鈕
+    let cartBtn = document.getElementById("cartBtn");
+    let userArea = document.getElementById("userArea");
 
     if (user) {
-        // 有登入：顯示個人頭像 (點擊連至個人資訊頁)，隱藏登入註冊按鈕，顯示購物車
-        document.getElementById("userArea").innerHTML = `
-            <img src="images/user-icon.jpg" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; vertical-align: middle; margin-right: 20px;" onclick="location.href='profile.html'" alt="個人資訊">
+        userArea.innerHTML = `
+            <img src="images/user-icon.png" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #fff;" 
+                 onclick="location.href='profile.html'" title="個人資訊">
         `;
         if (loginBtn) loginBtn.style.display = "none";
         if (regBtn) regBtn.style.display = "none";
         if (cartBtn) cartBtn.style.display = "inline-block";
     } else {
-        // 未登入：清空頭像區塊，顯示登入註冊按鈕，隱藏購物車
-        document.getElementById("userArea").innerHTML = "";
+        userArea.innerHTML = "";
         if (loginBtn) loginBtn.style.display = "inline-block";
         if (regBtn) regBtn.style.display = "inline-block";
         if (cartBtn) cartBtn.style.display = "none";
     }
 }
-
-// 登出功能 (此處的登出會重新整理頁面，個人資訊頁也有專屬的登出函數)
-function logout() {
-    localStorage.removeItem("loginUser");
-    location.reload();
-}
-
-// 初始化：當網頁載入時，先執行一次更新購物車與檢查登入狀態
-updateCartCount();
-showUser();

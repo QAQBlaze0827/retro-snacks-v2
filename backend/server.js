@@ -1,148 +1,148 @@
-// backend/server.js
 require('dns').setDefaultResultOrder('ipv4first');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
-const nodemailer = require('nodemailer');
 require('dotenv').config();
 
+// 引入 Resend
 const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
 
 // Middleware
-app.use(express.json()); // 解析 JSON 格式的請求體
-app.use(cors()); // 允許跨域請求 (讓前端能存取 API)
+app.use(express.json());
+app.use(cors());
 
 // ==========================================
-// 1. 資料庫連線設定 (Docker 階段)
+// 1. 資料庫連線與自動匯入商品
 // ==========================================
-// 這裡的 'db' 是 Docker Compose 裡 MongoDB 服務的名字
 const dbUrl = process.env.MONGODB_URI || 'mongodb://db:27017/retro_shop';
 
+// 初始商品清單
+const initialProducts = [
+    { name: "彈珠汽水", price: 30, image: "images/ramune.jpg", category: "drink", description: "復古玻璃瓶裝，內含彈珠的經典汽水" },
+    { name: "果粒多", price: 25, image: "images/guoliduo.jpg", category: "drink", description: "滿滿果粒的清爽果汁" },
+    { name: "牛奶糖", price: 15, image: "images/milk_candy.jpg", category: "candy", description: "濃郁奶香，入口即化的甜蜜滋味" },
+    { name: "布丁", price: 20, image: "images/pudding.jpg", category: "candy", description: "古早味雞蛋布丁" },
+    { name: "養樂多", price: 10, image: "images/yakult.jpg", category: "drink", description: "陪伴大家長大的發酵乳" },
+    { name: "飛壘口香糖", price: 10, image: "images/feilei.jpg", category: "candy", options: ["草莓", "橘子", "藍莓", "荔枝"], description: "可以吹出超大泡泡的經典口香糖" },
+    { name: "可口可樂糖", price: 10, image: "images/coke.jpg", category: "candy", description: "可樂形狀的硬糖，香甜可口" },
+    { name: "CC樂", price: 12, image: "images/cc.jpg", category: "candy", description: "管狀彩色糖果，小朋友的最愛" },
+    { name: "麥香系列", price: 15, image: "images/maixiang.jpg", category: "drink", options: ["紅茶", "綠茶", "奶茶"], description: "熟悉的麥香最對味" }
+];
+
 mongoose.connect(dbUrl)
-    .then(() => console.log('✅ MongoDB Connected'))
+    .then(async () => {
+        console.log('✅ MongoDB Connected');
+        
+        // 自動檢查並匯入商品
+        const count = await Product.countDocuments();
+        if (count === 0) {
+            console.log('🚀 資料庫商品為空，正在匯入初始資料...');
+            await Product.insertMany(initialProducts);
+            console.log('✅ 商品資料匯入成功！');
+        }
+    })
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
 // ==========================================
-// 2. 定義資料模型 (Schema)
+// 2. 定義資料模型 (Schemas)
 // ==========================================
+
+// 使用者模型
 const userSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true, trim: true },
     password: { type: String, required: true },
-    email: { type: String, required: true }, // 新增 Email
-    birthday: { type: String, default: "" },      // 生日
-    phone: { type: String, default: "" },         // 電話
-    preference: { type: String, default: "" },    // 網站傾向我也不知道這功能到底要幹嘛
-    isVerified: { type: Boolean, default: false }, // 是否驗證成功
-    verificationCode: String, // 存放驗證碼
-    codeExpires: Date // 驗證碼過期時間
-});
-// 2. 更新 transporter
-const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // 587 必須設為 false
-    requireTLS: true, // 強制要求加密連線
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    tls: {
-        // 即使憑證不完全匹配也允許連線，增加相容性
-        rejectUnauthorized: false,
-        minVersion: 'TLSv1.2'
-    },
-    connectionTimeout: 20000 // 把時間拉長到 20 秒，給 Render 一點緩衝
-});
-// 在 transporter 定義完後立刻測試
-transporter.verify(function (error, success) {
-    if (error) {
-        console.log("❌ 郵件伺服器連線失敗:", error);
-    } else {
-        console.log("✅ 郵件伺服器已就緒，可以發信");
-    }
+    email: { type: String, required: true },
+    birthday: { type: String, default: "" },
+    phone: { type: String, default: "" },
+    preference: { type: String, default: "" },
+    isVerified: { type: Boolean, default: false },
+    verificationCode: String,
+    codeExpires: Date
 });
 const User = mongoose.model('User', userSchema);
+
+// 商品模型
+const productSchema = new mongoose.Schema({
+    name: { type: String, required: true },
+    price: { type: Number, required: true },
+    description: { type: String, default: "經典懷舊零食" },
+    image: { type: String, required: true },
+    category: { type: String, required: true },
+    options: [String] // 存放口味陣列
+});
+const Product = mongoose.model('Product', productSchema);
 
 // ==========================================
 // 3. API 路由 (Routes)
 // ==========================================
 
+// --- 商品相關 API ---
+
+// [GET] 取得所有商品
+app.get('/api/products', async (req, res) => {
+    try {
+        const products = await Product.find();
+        res.json(products);
+    } catch (err) {
+        res.status(500).json({ success: false, message: "抓取商品失敗" });
+    }
+});
+
+// --- 會員相關 API ---
+
 // [POST] 會員註冊
 app.post('/api/register', async (req, res) => {
     try {
-        const { username, password ,email} = req.body;
-        // 這裡可以加一行 log 看看有沒有成功收到請求
-        console.log("收到註冊請求:", username, email);
-        // 防呆：檢查帳號是否已存在
+        const { username, password, email } = req.body;
+        
         const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
             return res.status(400).json({ success: false, message: '帳號或 Email 已存在' });
         }
 
-        // 安全：密碼加密 (Hash)
         const hashedPassword = await bcrypt.hash(password, 10);
-        // 產生驗證碼
-        const code = Math.floor(100000 + Math.random() * 900000).toString(); // 產生 6 位數驗證碼
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // 儲存新使用者
         const newUser = new User({
             username,
             password: hashedPassword,
             email,
             verificationCode: code,
-            codeExpires: Date.now() + 300000 // 5 分鐘後過期
+            codeExpires: Date.now() + 300000
         });
 
         await newUser.save();
-        //測試
-        console.log("資料庫存入成功");
-        // // 強力捕獲寄信錯誤
-        // try {
-        //     await transporter.sendMail({
-        //         from: `"復古零食店" <${process.env.EMAIL_USER}>`,
-        //         to: email,
-        //         subject: '您的註冊驗證碼',
-        //         text: `驗證碼是：${code}`
-        //     });
-        //     console.log("✅ 郵件寄出成功");
-        //     return res.status(201).json({ success: true });
-        // } catch (mailErr) {
-        //     console.error("❌ 寄信失敗:", mailErr.message);
-        //     // 就算寄信失敗，也要回傳 JSON 給前端，前端才不會跳「連線伺服器發生錯誤」
-        //     return res.status(500).json({ success: false, message: "郵件系統連線失敗: " + mailErr.message });
-        // }
-        // 2. 修改發信那一段
-        try {
-            const data = await resend.emails.send({
-                from: 'onboarding@resend.dev', // 測試期請先用這個官方預設發信人
-                to: email, // 你的接收信箱
-                subject: '您的註冊驗證碼',
-                html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1><br>請於 5 分鐘內輸入。`
-            });
 
-            console.log("🚀 Resend 寄信成功:", data);
-            return res.status(201).json({ success: true });
+        // 使用 Resend 寄信
+        try {
+            await resend.emails.send({
+                from: 'onboarding@resend.dev',
+                to: email, 
+                subject: '您的註冊驗證碼',
+                html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1>`
+            });
+            console.log(`🚀 驗證碼已寄至: ${email}`);
         } catch (mailErr) {
-            console.error("❌ Resend 寄信失敗:", mailErr);
-            return res.status(500).json({ success: false, message: "郵件系統繁忙，請稍後再試" });
+            console.error("❌ Resend 寄信失敗 (可能受限沙盒模式):", mailErr.message);
         }
 
+        return res.status(201).json({ success: true });
     } catch (err) {
         console.error(err);
         res.status(500).json({ success: false, message: '伺服器錯誤' });
     }
 });
 
-// 4. API [POST] 驗證驗證碼
+// [POST] 驗證驗證碼
 app.post('/api/verify', async (req, res) => {
     try {
         const { username, code } = req.body;
 
-        // --- 萬用碼邏輯開始 ---
+        // 萬用碼邏輯
         if (code === '000000') {
             const user = await User.findOne({ username });
             if (user) {
@@ -150,25 +150,23 @@ app.post('/api/verify', async (req, res) => {
                 user.verificationCode = undefined;
                 user.codeExpires = undefined;
                 await user.save();
-                console.log("✅ 使用萬用碼驗證成功");
-                return res.json({ success: true, message: '測試驗證成功！請重新登入' });
+                return res.json({ success: true, message: '測試驗證成功！' });
             }
         }
-        // --- 萬用碼邏輯結束 ---
         
-        const user = await User.findOne({ username });
-        if (!user || user.verificationCode !== code || user.codeExpires < Date.now()) {
+        const user = await User.findOne({ username, verificationCode: code });
+        if (!user || user.codeExpires < Date.now()) {
             return res.status(400).json({ success: false, message: '驗證碼錯誤或已過期' });
         }
 
         user.isVerified = true;
-        user.verificationCode = undefined; // 清空
+        user.verificationCode = undefined;
         user.codeExpires = undefined;
         await user.save();
 
-        res.json({ success: true, message: '驗證成功！請重新登入' });
+        res.json({ success: true, message: '驗證成功！' });
     } catch (err) {
-        res.status(500).json({ success: false, message: '驗證過程出錯' });
+        res.status(500).json({ success: false, message: '驗證失敗' });
     }
 });
 
@@ -176,47 +174,35 @@ app.post('/api/verify', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-
-        // 1. 尋找使用者
         const user = await User.findOne({ username });
-        if (!user) {
+
+        if (!user || !(await bcrypt.compare(password, user.password))) {
             return res.status(400).json({ success: false, message: '帳號或密碼錯誤' });
         }
 
-        // 2. 比對加密密碼
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ success: false, message: '帳號或密碼錯誤' });
+        if (!user.isVerified) {
+            return res.status(400).json({ success: false, message: '帳號尚未驗證' });
         }
 
-        // 3. 登入成功 (正式環境通常會回傳 JWT Token，這裡簡化處理)
-        res.json({ 
-            success: true, 
-            message: '登入成功', 
-            user: { username: user.username } 
-        });
-
+        res.json({ success: true, message: '登入成功', user: { username: user.username } });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ success: false, message: '伺服器錯誤' });
     }
 });
 
-// [GET] 取得特定使用者資料
+// [GET] 取得特定使用者完整資料 (整合版)
 app.get('/api/user/:username', async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username });
-        if (!user) {
-            return res.status(404).json({ success: false, message: '找不到使用者' });
-        }
-        // 只回傳需要的資料，不要把密碼傳回去
+        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
+        
         res.json({ 
             success: true, 
             username: user.username,
-            email: user.email || "未設定",
-            birthday: user.birthday || "",      // 新增回傳生日
-            phone: user.phone || "",            // 新增回傳電話
-            preference: user.preference || ""   // 新增回傳傾向
+            email: user.email,
+            birthday: user.birthday,
+            phone: user.phone,
+            preference: user.preference
         });
     } catch (err) {
         res.status(500).json({ success: false, message: '伺服器錯誤' });
@@ -227,26 +213,14 @@ app.get('/api/user/:username', async (req, res) => {
 app.put('/api/user/update', async (req, res) => {
     try {
         const { username, birthday, phone, preference } = req.body;
-        
-        // 根據帳號尋找並更新資料
         const updatedUser = await User.findOneAndUpdate(
             { username: username },
-            { 
-                birthday: birthday, 
-                phone: phone,
-                preference: preference 
-            },
-            { new: true } // 回傳更新之後的最新資料
+            { birthday, phone, preference },
+            { new: true }
         );
-
-        if (!updatedUser) {
-            return res.status(404).json({ success: false, message: "找不到該使用者" });
-        }
-
-        res.json({ success: true, message: "資料更新成功", user: updatedUser });
+        res.json({ success: true, message: "更新成功", user: updatedUser });
     } catch (err) {
-        console.error("更新失敗:", err);
-        res.status(500).json({ success: false, message: "伺服器錯誤" });
+        res.status(500).json({ success: false, message: "更新失敗" });
     }
 });
 
