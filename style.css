@@ -10,7 +10,7 @@ color:#fff;
 header{
 display:flex;
 align-items:center;
-padding:12px;
+padding:6px;
 background:#6b3e2e;
 border-radius:0 0 20px 20px;
 }
@@ -21,8 +21,8 @@ border-radius:0 0 20px 20px;
 /* logo */
 
 .logo{
-width:100px;
-height:100px;
+width:80px;
+height:80px;
 border-radius:50%;
 margin:10px;
 }
@@ -98,7 +98,7 @@ background:#7f5539;
 
 .banner{
 width:80%;
-margin:40px auto;
+margin:20px auto;
 }
 
 .banner img{
@@ -110,33 +110,75 @@ border-radius:20px;
 
 /* products */
 
-.products{
-display:flex;
-justify-content:space-around;
-flex-wrap:wrap;
-margin:40px;
-gap:30px;
+/* 修改 .products 部分 */
+.products {
+    display: grid;
+    /* 將 220px 改小一點（例如 160px），這樣在小螢幕也能輕鬆排成兩欄。
+       auto-fit 會自動根據空間調整數量。
+    */
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+    gap: 35px;            /* 間距稍微縮小一點點 */
+    width: 90%;           /* 寬度稍微拉開 */
+    margin: 20px auto;
+    justify-items: center; /* 確保卡片在格子裡是置中的 */
 }
 
-.card{
-width:200px;
-background:#d4a373;
-padding:10px;
-text-align:center;
-cursor:pointer;
-border-radius:20px;
-transition:0.3s;
+/* 修改 .card 部分 */
+.card {
+    /* 重要：把原本的 width: 200px 刪掉或改成 width: 100%！
+       因為現在寬度是由 Grid 的格子（1fr）來決定的。
+    */
+    width: 100%; 
+    max-width: 240px;     /* 限制一下最大寬度，避免在大螢幕變得太肥 */
+    background: #d4a373;
+    padding: 12px;
+    text-align: center;
+    border-radius: 20px;
+    transition: 0.3s;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    border: 2px solid #6b3e2e;
+    
+    /* 確保卡片內部內容垂直分佈 */
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .card:hover{
 transform:scale(1.05);
 }
 
-.card img{
-width:100%;
-height:150px;
-object-fit:cover;
-border-radius:15px;
+/* 強化圖片顯示區塊 */
+.card img {
+    width: 100%;
+    height: 180px; /* 固定高度，避免圖片大小不一導致卡片跳動 */
+    object-fit: cover;
+    border-radius: 12px;
+    background-color: #faedcd; /* 沒圖片時顯示的底色 */
+    margin-bottom: 15px;
+}
+
+/* 商品名稱 */
+.card h3 {
+    margin: 10px 0 5px 0;
+    color: #3b2f2f; /* 深色文字更好讀 */
+    font-size: 1.2rem;
+}
+
+/* 商品價格 */
+.card p {
+    color: #d9534f; /* 價格用紅色突顯 */
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+}
+
+/* 修改 .card 裡面的按鈕 */
+.card button {
+    width: 100%;
+    padding: 12px;
+    font-weight: bold;
+    letter-spacing: 1px;
 }
 
 /* popup */

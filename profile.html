@@ -149,6 +149,7 @@
 
         console.log("當前連線的 API 網址是:", API_URL);
 
+        let username = localStorage.getItem("loginUser"); // 從 localStorage 取出登入的使用者名稱
         // 一進頁面先檢查登入狀態
         if(!username) {
             alert("請先登入！");
