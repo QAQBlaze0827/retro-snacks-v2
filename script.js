@@ -65,7 +65,7 @@ function renderProducts(products) {
 }
 
 // ==========================================
-// 4. 商品介紹彈窗 (處理口味、數量)
+// 4. 商品介紹彈窗 (全新升級：整合 Sketchfab 3D 邏輯)
 // ==========================================
 function showProduct(product) {
     // 填入基本資料
@@ -75,15 +75,71 @@ function showProduct(product) {
     document.getElementById("pprice").innerText = "價格 $" + product.price;
     document.getElementById("popupQty").value = 1; // 數量重置為 1
 
-    // 處理「口味/規格」下拉選單
     const optionSection = document.getElementById("optionSection");
     const optionSelect = document.getElementById("productOption");
 
+    // 💡 檢查有沒有舊的 3D 按鈕，如果沒有就建立一個
+    let view3dBtn = document.getElementById("view3dBtn");
+    if (!view3dBtn) {
+        view3dBtn = document.createElement("button");
+        view3dBtn.id = "view3dBtn";
+        view3dBtn.style.width = "100%";
+        view3dBtn.style.padding = "10px";
+        view3dBtn.style.marginTop = "10px";
+        view3dBtn.style.backgroundColor = "#4185f4"; // 藍色按鈕區隔購物車
+        view3dBtn.style.color = "white";
+        view3dBtn.style.border = "none";
+        view3dBtn.style.borderRadius = "20px";
+        view3dBtn.style.cursor = "pointer";
+        view3dBtn.style.fontWeight = "bold";
+        
+        // 把 3D 按鈕塞到「加入購物車」按鈕的上方
+        const addBtn = document.getElementById("popupAddBtn");
+        addBtn.parentNode.insertBefore(view3dBtn, addBtn);
+    }
+
+    // 💡 核心 3D 連動邏輯開始
     if (product.options && product.options.length > 0) {
+        // 【情況 A】商品有分口味（例如：飛壘、麥香）
         optionSection.style.display = "block"; // 顯示選單
-        optionSelect.innerHTML = product.options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+        
+        // 渲染選單選項（注意：現在要用 opt.flavor 喔！）
+        optionSelect.innerHTML = product.options.map(opt => `<option value="${opt.flavor}">${opt.flavor}</option>`).join('');
+        
+        // 定義一個「更新 3D 按鈕網址」的動作
+        function update3dButtonLink() {
+            const currentFlavor = optionSelect.value;
+            // 從陣列中找出目前選中口味的完整物件
+            const matchedOpt = product.options.find(opt => opt.flavor === currentFlavor);
+            
+            if (matchedOpt && matchedOpt.sketchfabUrl) {
+                view3dBtn.innerText = `📦 查看 ${currentFlavor} 3D 模型`;
+                view3dBtn.style.display = "block";
+                view3dBtn.onclick = function() {
+                    window.open(matchedOpt.sketchfabUrl, '_blank'); // 開新視窗
+                };
+            } else {
+                view3dBtn.style.display = "none"; // 沒填網址就先藏起來
+            }
+        }
+
+        // 一打開彈窗先觸發一次更新，並且設定「當使用者切換口味時」自動重新對應網址
+        update3dButtonLink();
+        optionSelect.onchange = update3dButtonLink;
+
     } else {
-        optionSection.style.display = "none";  // 沒有口味就隱藏
+        // 【情況 B】商品沒分口味（例如：彈珠汽水、布丁）
+        optionSection.style.display = "none"; // 隱藏口味選單
+        
+        if (product.sketchfabUrl) {
+            view3dBtn.innerText = "📦 查看 3D 商品模型";
+            view3dBtn.style.display = "block";
+            view3dBtn.onclick = function() {
+                window.open(product.sketchfabUrl, '_blank');
+            };
+        } else {
+            view3dBtn.style.display = "none"; // 資料庫完全沒 3D 連結就隱藏
+        }
     }
 
     document.getElementById("popup").style.display = "block"; // 顯示彈窗
@@ -294,7 +350,7 @@ function showUser() {
 
     if (user) {
         userArea.innerHTML = `
-            <img src="images/user-icon.png" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #fff;" 
+            <img src="images/user-icon.jpg" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #fff;" 
                  onclick="location.href='profile.html'" title="個人資訊">
         `;
         if (loginBtn) loginBtn.style.display = "none";

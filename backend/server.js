@@ -22,15 +22,89 @@ const dbUrl = process.env.MONGODB_URI || 'mongodb://db:27017/retro_shop';
 
 // 初始商品清單
 const initialProducts = [
-    { name: "彈珠汽水", price: 30, image: "images/ramune.jpg", category: "drink", description: "復古玻璃瓶裝，內含彈珠的經典汽水" },
-    { name: "果粒多", price: 25, image: "images/guoliduo.jpg", category: "drink", description: "滿滿果粒的清爽果汁" },
-    { name: "牛奶糖", price: 15, image: "images/milk_candy.jpg", category: "candy", description: "濃郁奶香，入口即化的甜蜜滋味" },
-    { name: "布丁", price: 20, image: "images/pudding.jpg", category: "candy", description: "古早味雞蛋布丁" },
-    { name: "養樂多", price: 10, image: "images/yakult.jpg", category: "drink", description: "陪伴大家長大的發酵乳" },
-    { name: "飛壘口香糖", price: 10, image: "images/feilei.jpg", category: "candy", options: ["草莓", "橘子", "藍莓", "荔枝"], description: "可以吹出超大泡泡的經典口香糖" },
-    { name: "可口可樂糖", price: 10, image: "images/coke.jpg", category: "candy", description: "可樂形狀的硬糖，香甜可口" },
-    { name: "CC樂", price: 12, image: "images/cc.jpg", category: "candy", description: "管狀彩色糖果，小朋友的最愛" },
-    { name: "麥香系列", price: 15, image: "images/maixiang.jpg", category: "drink", options: ["紅茶", "綠茶", "奶茶"], description: "熟悉的麥香最對味" }
+    { 
+        name: "彈珠汽水", 
+        price: 30, 
+        image: "images/ramune.jpg", 
+        category: "drink", 
+        description: "復古玻璃瓶裝，內含彈珠的經典汽水",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" // 沒有口味的，直接放最外層
+    },
+    { 
+        name: "果粒多", 
+        price: 25, 
+        image: "images/guoliduo.jpg", 
+        category: "drink", 
+        description: "滿滿果粒的清爽果汁",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "牛奶糖", 
+        price: 15, 
+        image: "images/milk_candy.jpg", 
+        category: "candy", 
+        description: "濃郁奶香，入口即化的甜蜜滋味",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "布丁", 
+        price: 20, 
+        image: "images/pudding.jpg", 
+        category: "candy", 
+        description: "古早味雞蛋布丁",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "養樂多", 
+        price: 10, 
+        image: "images/yakult.jpg", 
+        category: "drink", 
+        description: "陪伴大家長大的發酵乳",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "飛壘口香糖", 
+        price: 10, 
+        image: "images/feilei.jpg", 
+        category: "candy", 
+        description: "可以吹出超大泡泡的經典口香糖",
+        // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
+        options: [
+            { flavor: "草莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "藍莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "荔枝", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" }
+        ]
+    },
+    { 
+        name: "可口可樂糖", 
+        price: 10, 
+        image: "images/coke.jpg", 
+        category: "candy", 
+        description: "可樂形狀的硬糖，香甜可口",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "CC樂", 
+        price: 12, 
+        image: "images/cc.jpg", 
+        category: "candy", 
+        description: "管狀彩色糖果，小朋友的最愛",
+        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+    },
+    { 
+        name: "麥香系列", 
+        price: 15, 
+        image: "images/maixiang.jpg", 
+        category: "drink", 
+        description: "熟悉的麥香最對味",
+        // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
+        options: [
+            { flavor: "紅茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "綠茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "奶茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" }
+        ]
+    }
 ];
 
 mongoose.connect(dbUrl)
@@ -69,10 +143,16 @@ const User = mongoose.model('User', userSchema);
 const productSchema = new mongoose.Schema({
     name: { type: String, required: true },
     price: { type: Number, required: true },
-    description: { type: String, default: "經典懷舊零食" },
     image: { type: String, required: true },
     category: { type: String, required: true },
-    options: [String] // 存放口味陣列
+    description: { type: String },
+    sketchfabUrl: { type: String }, // 新增這行：單一商品的 3D 連結
+    options: [
+        {
+            flavor: String,        // 口味名稱 (例如：草莓)
+            sketchfabUrl: String   // 該口味專屬的 3D 連結
+        }
+    ]
 });
 const Product = mongoose.model('Product', productSchema);
 
