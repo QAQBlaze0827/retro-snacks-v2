@@ -3,6 +3,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 // 引入 Resend
@@ -10,6 +11,11 @@ const { Resend } = require('resend');
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const app = express();
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
+
+if (!process.env.JWT_SECRET) {
+    console.warn('⚠️ JWT_SECRET 未設定，目前使用開發用預設值。正式部署請在 Render 設定 JWT_SECRET。');
+}
 
 // Middleware
 app.use(express.json());
@@ -156,6 +162,42 @@ const productSchema = new mongoose.Schema({
 });
 const Product = mongoose.model('Product', productSchema);
 
+function createToken(user) {
+    return jwt.sign(
+        { id: user._id.toString(), username: user.username },
+        JWT_SECRET,
+        { expiresIn: '7d' }
+    );
+}
+
+function publicUserData(user) {
+    return {
+        username: user.username,
+        email: user.email,
+        birthday: user.birthday,
+        phone: user.phone,
+        preference: user.preference
+    };
+}
+
+function authenticateToken(req, res, next) {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.startsWith('Bearer ')
+        ? authHeader.slice(7)
+        : null;
+
+    if (!token) {
+        return res.status(401).json({ success: false, message: '請先登入' });
+    }
+
+    try {
+        req.user = jwt.verify(token, JWT_SECRET);
+        next();
+    } catch (err) {
+        return res.status(401).json({ success: false, message: '登入已過期，請重新登入' });
+    }
+}
+
 // ==========================================
 // 3. API 路由 (Routes)
 // ==========================================
@@ -264,41 +306,58 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ success: false, message: '帳號尚未驗證' });
         }
 
-        res.json({ success: true, message: '登入成功', user: { username: user.username } });
-    } catch (err) {
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
-    }
-});
-
-// [GET] 取得特定使用者完整資料 (整合版)
-app.get('/api/user/:username', async (req, res) => {
-    try {
-        const user = await User.findOne({ username: req.params.username });
-        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
-        
-        res.json({ 
-            success: true, 
-            username: user.username,
-            email: user.email,
-            birthday: user.birthday,
-            phone: user.phone,
-            preference: user.preference
+        const token = createToken(user);
+        res.json({
+            success: true,
+            message: '登入成功',
+            token,
+            user: { username: user.username }
         });
     } catch (err) {
         res.status(500).json({ success: false, message: '伺服器錯誤' });
     }
 });
 
-// [PUT] 更新使用者詳細資料
-app.put('/api/user/update', async (req, res) => {
+// [GET] 取得目前登入使用者資料
+app.get('/api/user/me', authenticateToken, async (req, res) => {
     try {
-        const { username, birthday, phone, preference } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
+
+        res.json({ success: true, ...publicUserData(user) });
+    } catch (err) {
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// [GET] 取得特定使用者完整資料 (保留舊網址，但仍需 JWT)
+app.get('/api/user/:username', authenticateToken, async (req, res) => {
+    try {
+        if (req.params.username !== req.user.username) {
+            return res.status(403).json({ success: false, message: '無權限讀取此使用者資料' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
+
+        res.json({ success: true, ...publicUserData(user) });
+    } catch (err) {
+        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    }
+});
+
+// [PUT] 更新使用者詳細資料
+app.put('/api/user/update', authenticateToken, async (req, res) => {
+    try {
+        const { birthday, phone, preference } = req.body;
         const updatedUser = await User.findOneAndUpdate(
-            { username: username },
+            { _id: req.user.id },
             { birthday, phone, preference },
             { new: true }
         );
-        res.json({ success: true, message: "更新成功", user: updatedUser });
+        if (!updatedUser) return res.status(404).json({ success: false, message: '找不到使用者' });
+
+        res.json({ success: true, message: "更新成功", user: publicUserData(updatedUser) });
     } catch (err) {
         res.status(500).json({ success: false, message: "更新失敗" });
     }

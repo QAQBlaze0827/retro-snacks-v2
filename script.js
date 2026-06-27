@@ -334,6 +334,7 @@ async function login() {
         const data = await response.json();
         if (data.success) {
             localStorage.setItem("loginUser", data.user.username);
+            localStorage.setItem("authToken", data.token);
             alert("登入成功！");
             location.reload(); // 重新整理來顯示頭像
         } else { alert("失敗：" + data.message); }
@@ -343,12 +344,13 @@ async function login() {
 // 根據登入狀態切換右上角按鈕
 function showUser() {
     let user = localStorage.getItem("loginUser");
+    let token = localStorage.getItem("authToken");
     let loginBtn = document.getElementById("loginBtn");
     let regBtn = document.getElementById("regBtn");
     let cartBtn = document.getElementById("cartBtn");
     let userArea = document.getElementById("userArea");
 
-    if (user) {
+    if (user && token) {
         userArea.innerHTML = `
             <img src="images/user-icon.jpg" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #fff;" 
                  onclick="location.href='profile.html'" title="個人資訊">
@@ -357,6 +359,8 @@ function showUser() {
         if (regBtn) regBtn.style.display = "none";
         if (cartBtn) cartBtn.style.display = "inline-block";
     } else {
+        localStorage.removeItem("loginUser");
+        localStorage.removeItem("authToken");
         userArea.innerHTML = "";
         if (loginBtn) loginBtn.style.display = "inline-block";
         if (regBtn) regBtn.style.display = "inline-block";
