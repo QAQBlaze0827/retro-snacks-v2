@@ -13,7 +13,7 @@ console.log("當前連線的 API 網址是:", API_URL);
 window.onload = function() {
     fetchProducts();    // 1. 去資料庫抓商品
     showUser();         // 2. 檢查有沒有登入，更新右上角
-    updateCartCount();  // 3. 更新購物車圖示數字
+    updateFavoriteCount();  // 3. 更新收藏圖示數字
 };
 
 // ==========================================
@@ -86,14 +86,14 @@ function showProduct(product) {
         view3dBtn.style.width = "100%";
         view3dBtn.style.padding = "10px";
         view3dBtn.style.marginTop = "10px";
-        view3dBtn.style.backgroundColor = "#4185f4"; // 藍色按鈕區隔購物車
+        view3dBtn.style.backgroundColor = "#4185f4"; // 藍色按鈕區隔收藏
         view3dBtn.style.color = "white";
         view3dBtn.style.border = "none";
         view3dBtn.style.borderRadius = "20px";
         view3dBtn.style.cursor = "pointer";
         view3dBtn.style.fontWeight = "bold";
         
-        // 把 3D 按鈕塞到「加入購物車」按鈕的上方
+        // 把 3D 按鈕塞到「加入收藏」按鈕的上方
         const addBtn = document.getElementById("popupAddBtn");
         addBtn.parentNode.insertBefore(view3dBtn, addBtn);
     }
@@ -144,11 +144,13 @@ function showProduct(product) {
 
     document.getElementById("popup").style.display = "block"; // 顯示彈窗
 
-    // 綁定「加入購物車」按鈕點擊事件
+    document.getElementById("popupAddBtn").innerText = "加入收藏";
+
+    // 綁定「加入收藏」按鈕點擊事件
     document.getElementById("popupAddBtn").onclick = function() {
         let qty = parseInt(document.getElementById("popupQty").value);
         let selectedOption = optionSection.style.display === "block" ? optionSelect.value : "";
-        addToCart(product.name, product.price, qty, selectedOption);
+        addToFavorites(product.name, product.price, qty, selectedOption);
         closePopup();
     };
 }
@@ -201,72 +203,63 @@ function searchProduct() {
 }
 
 // ==========================================
-// 6. 購物車系統 (儲存在 localStorage)
+// 6. 收藏系統 (儲存在 localStorage)
 // ==========================================
-function addToCart(name, price, qty, option) {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+function addToFavorites(name, price, qty, option) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     
-    // 把選擇的商品資訊存進去
-    cart.push({ 
-        name: name, 
-        price: price, 
-        quantity: qty, 
-        option: option // 口味
-    });
+    const existingItem = favorites.find(item => item.name === name && item.option === option);
+    if (existingItem) {
+        existingItem.quantity = qty;
+    } else {
+        // 把選擇的商品資訊存進收藏
+        favorites.push({ 
+            name: name, 
+            price: price, 
+            quantity: qty, 
+            option: option // 口味
+        });
+    }
 
-    localStorage.setItem("cart", JSON.stringify(cart));
-    updateCartCount();
-    alert(`已加入購物車：${name} ${option} x ${qty}`);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    updateFavoriteCount();
+    alert(`已加入收藏：${name} ${option} x ${qty}`);
 }
 
-function updateCartCount() {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    let countElement = document.getElementById("cartCount");
-    // 因為你是用圖片當按鈕，建議在 HTML 購物車圖片旁邊加一個 <span id="cartCount"></span>
-    if (countElement) countElement.innerText = cart.length;
+function updateFavoriteCount() {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    let countElement = document.getElementById("favoriteCount");
+    if (countElement) countElement.innerText = favorites.length;
 }
 
-function openCart() {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+function openFavorites() {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     let html = "";
-    let total = 0;
 
-    cart.forEach((item, i) => {
+    favorites.forEach((item, i) => {
         html += `
             <p style="color: black; border-bottom: 1px solid #ddd; padding: 10px 0;">
                 ${item.name} ${item.option ? '('+item.option+')' : ''} - $${item.price} x ${item.quantity}
-                <button onclick="removeItem(${i})" style="float: right; background: #d9534f; padding: 2px 8px;">刪除</button>
+                <button onclick="removeFavorite(${i})" style="float: right; background: #d9534f; padding: 2px 8px;">刪除</button>
             </p>
         `;
-        total += (item.price * item.quantity);
     });
 
-    document.getElementById("cartItems").innerHTML = html || "<p style='color:black;'>購物車是空的</p>";
-    document.getElementById("cartTotal").innerText = "總金額 $" + total;
-    document.getElementById("cartModal").style.display = "block";
+    document.getElementById("favoriteItems").innerHTML = html || "<p style='color:black;'>目前沒有收藏商品</p>";
+    document.getElementById("favoriteSummary").innerText = `共 ${favorites.length} 項收藏`;
+    document.getElementById("favoriteModal").style.display = "block";
 }
 
-function closeCart() {
-    document.getElementById("cartModal").style.display = "none";
+function closeFavorites() {
+    document.getElementById("favoriteModal").style.display = "none";
 }
 
-function removeItem(i) {
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
-    cart.splice(i, 1);
-    localStorage.setItem("cart", JSON.stringify(cart));
-    openCart();
-    updateCartCount();
-}
-
-function checkout() {
-    if(JSON.parse(localStorage.getItem("cart")).length === 0) {
-        alert("購物車是空的喔！");
-        return;
-    }
-    alert("感謝您的購買！(此為 Demo，未串接金流)");
-    localStorage.removeItem("cart");
-    updateCartCount();
-    closeCart();
+function removeFavorite(i) {
+    let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
+    favorites.splice(i, 1);
+    localStorage.setItem("favorites", JSON.stringify(favorites));
+    openFavorites();
+    updateFavoriteCount();
 }
 
 // ==========================================
@@ -357,7 +350,7 @@ function showUser() {
         `;
         if (loginBtn) loginBtn.style.display = "none";
         if (regBtn) regBtn.style.display = "none";
-        if (cartBtn) cartBtn.style.display = "inline-block";
+        if (cartBtn) cartBtn.style.display = "inline-flex";
     } else {
         localStorage.removeItem("loginUser");
         localStorage.removeItem("authToken");
