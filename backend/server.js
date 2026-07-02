@@ -50,7 +50,7 @@ const initialProducts = [
         image: "images/milk_candy.jpg", 
         category: "candy", 
         description: "濃郁奶香，入口即化的甜蜜滋味",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+        sketchfabUrl: "https://sketchfab.com/3d-models/5df91043388c4a2dbb4201e08a9a6a99"
     },
     { 
         name: "布丁", 
@@ -76,10 +76,10 @@ const initialProducts = [
         description: "可以吹出超大泡泡的經典口香糖",
         // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
         options: [
-            { flavor: "草莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
-            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
+            { flavor: "草莓", sketchfabUrl: "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44" },
+            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/88248ae4978c4272b4dccbb1232bd852" },
             { flavor: "藍莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
-            { flavor: "荔枝", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" }
+            { flavor: "荔枝", sketchfabUrl: "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99" }
         ]
     },
     { 
@@ -88,7 +88,7 @@ const initialProducts = [
         image: "images/coke.jpg", 
         category: "candy", 
         description: "可樂形狀的硬糖，香甜可口",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+        sketchfabUrl: "https://sketchfab.com/3d-models/387be1a9b7eb460c85619d7343e14fac"
     },
     { 
         name: "CC樂", 
@@ -96,7 +96,7 @@ const initialProducts = [
         image: "images/cc.jpg", 
         category: "candy", 
         description: "管狀彩色糖果，小朋友的最愛",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+        sketchfabUrl: "https://sketchfab.com/3d-models/cc-0d7e0d9d47634765a5bc464d5d07947f"
     },
     { 
         name: "麥香系列", 
@@ -106,9 +106,9 @@ const initialProducts = [
         description: "熟悉的麥香最對味",
         // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
         options: [
-            { flavor: "紅茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
-            { flavor: "綠茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
-            { flavor: "奶茶", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" }
+            { flavor: "紅茶", sketchfabUrl: "https://sketchfab.com/3d-models/c25a395ac0ae4a89ab1f7bc11385f509" },
+            { flavor: "綠茶", sketchfabUrl: "https://sketchfab.com/3d-models/0ebaead5934542559a4551928a96e7a0" },
+            { flavor: "奶茶", sketchfabUrl: "https://sketchfab.com/3d-models/c7e4f6e4b1204b2eb6932be688ca87c6" }
         ]
     }
 ];
