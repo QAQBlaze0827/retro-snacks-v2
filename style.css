@@ -53,6 +53,7 @@ border-radius:0 0 20px 20px;
 }
 
 .favoriteCount {
+    display: none;
     position: absolute;
     top: -5px;
     right: -5px;
@@ -481,28 +482,42 @@ input[type=number] {
     #userArea {
         margin-left: auto;
         order: 3;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
     }
 
     #userArea img {
-        width: 44px !important;
-        height: 44px !important;
+        display: block;
+        width: 42px !important;
+        height: 42px !important;
+        border: 2px solid #faedcd !important;
+        background: #faedcd;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.25);
     }
 
     .favoriteIcon {
-        width: 48px;
-        height: 48px;
-        margin-left: 2px;
+        width: 42px;
+        height: 42px;
+        margin-left: 4px;
         order: 4;
+        flex: 0 0 auto;
     }
 
     .favoriteImage {
-        width: 46px;
-        height: 46px;
+        width: 42px;
+        height: 42px;
     }
 
     .favoriteCount {
-        top: -3px;
-        right: -4px;
+        top: -4px;
+        right: -5px;
+        min-width: 18px;
+        height: 18px;
+        font-size: 11px;
+        line-height: 18px;
     }
 
     .search {

@@ -228,7 +228,10 @@ function addToFavorites(name, price, qty, option, image) {
 function updateFavoriteCount() {
     let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     let countElement = document.getElementById("favoriteCount");
-    if (countElement) countElement.innerText = favorites.length;
+    if (countElement) {
+        countElement.innerText = favorites.length;
+        countElement.style.display = favorites.length > 0 ? "block" : "none";
+    }
 }
 
 function openFavorites() {
