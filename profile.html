@@ -2,6 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>個人資訊 - 復古零食店</title>
     <link rel="stylesheet" href="style.css"> 
     <style>
@@ -91,6 +92,57 @@
             border-radius: 5px;
             cursor: pointer;
         }
+
+        @media (max-width: 700px) {
+            .profile-container {
+                width: calc(100% - 24px);
+                margin: 12px auto;
+                padding: 20px 16px;
+            }
+
+            .profile-header {
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 22px;
+            }
+
+            .profile-header h2 {
+                margin: 0 !important;
+                padding-right: 0 !important;
+                flex: 1;
+                text-align: center;
+                font-size: 22px;
+            }
+
+            .profile-content {
+                flex-direction: column;
+                gap: 22px;
+            }
+
+            .profile-left img {
+                width: 120px !important;
+                height: 120px !important;
+            }
+
+            .profile-right div {
+                display: block;
+                text-align: left;
+            }
+
+            .profile-right label {
+                display: block;
+                width: auto;
+                margin-bottom: 6px;
+                font-size: 16px;
+            }
+
+            .profile-right span,
+            .profile-right input,
+            .profile-right select {
+                width: 100%;
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
@@ -103,7 +155,7 @@
 
         <div class="profile-content">
             <div class="profile-left">
-                <img id="userAvatar" src="images/user-icon.png" style="width: 150px; height: 150px; border-radius: 10px; border: 3px solid #5a3d2b; object-fit: cover;">
+                <img id="userAvatar" src="images/user-icon.jpg" style="width: 150px; height: 150px; border-radius: 10px; border: 3px solid #5a3d2b; object-fit: cover;">
                 <button style="margin-top: 15px; padding: 5px 10px; cursor: pointer;">更換大頭貼</button>
                 <button onclick="logoutFromProfile()" class="logout-btn">登出帳號</button>
             </div>

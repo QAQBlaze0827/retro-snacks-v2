@@ -1,8 +1,13 @@
+* {
+box-sizing:border-box;
+}
+
 body{
 font-family:"微軟正黑體";
 background:#3b2f2f;
 margin:0;
 color:#fff;
+overflow-x:hidden;
 }
 
 /* header */
@@ -10,6 +15,7 @@ color:#fff;
 header{
 display:flex;
 align-items:center;
+gap:8px;
 padding:6px;
 background:#6b3e2e;
 border-radius:0 0 20px 20px;
@@ -114,6 +120,7 @@ color:black;
 
 .search{
 flex:1;
+min-width:180px;
 height:40px;
 font-size:16px;
 margin-right:10px;
@@ -152,6 +159,10 @@ border-radius:20px;
 }
 
 /* products */
+
+.products-section {
+    width: 100%;
+}
 
 /* 修改 .products 部分 */
 .products {
@@ -234,6 +245,7 @@ left:0;
 width:100%;
 height:100%;
 background:rgba(0,0,0,0.6);
+z-index:1000;
 }
 
 .popup-content{
@@ -320,6 +332,7 @@ left:0;
 width:100%;
 height:100%;
 background:rgba(0,0,0,0.6);
+z-index:1000;
 }
 
 .modal-box{
@@ -423,6 +436,196 @@ input::-webkit-inner-spin-button {
 /* 針對 Firefox 瀏覽器 */
 input[type=number] {
   -moz-appearance: textfield;
+}
+
+@media (max-width: 768px) {
+    header {
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 8px 10px 12px;
+        border-radius: 0 0 16px 16px;
+    }
+
+    .menu {
+        width: 42px;
+        margin: 0;
+        text-align: center;
+        line-height: 42px;
+        order: 1;
+    }
+
+    .logo {
+        width: 56px;
+        height: 56px;
+        margin: 0 4px;
+        order: 2;
+    }
+
+    #loginBtn,
+    #regBtn {
+        padding: 9px 12px;
+        margin: 0;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+
+    #loginBtn {
+        margin-left: auto;
+        order: 3;
+    }
+
+    #regBtn {
+        order: 4;
+    }
+
+    #userArea {
+        margin-left: auto;
+        order: 3;
+    }
+
+    #userArea img {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    .favoriteIcon {
+        width: 48px;
+        height: 48px;
+        margin-left: 2px;
+        order: 4;
+    }
+
+    .favoriteImage {
+        width: 46px;
+        height: 46px;
+    }
+
+    .favoriteCount {
+        top: -3px;
+        right: -4px;
+    }
+
+    .search {
+        flex: 0 0 100%;
+        order: 5;
+        width: 100%;
+        min-width: 0;
+        margin: 4px 0 0;
+        padding: 0 14px;
+    }
+
+    .dropdown {
+        top: 44px;
+        min-width: 140px;
+    }
+
+    .banner {
+        width: 92%;
+        margin: 14px auto;
+    }
+
+    .banner img {
+        height: clamp(140px, 42vw, 240px);
+        border-radius: 14px;
+    }
+
+    .products {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        width: 92%;
+        margin: 16px auto;
+        align-items: stretch;
+    }
+
+    .card {
+        max-width: none;
+        padding: 9px;
+        border-radius: 14px;
+    }
+
+    .card:hover {
+        transform: none;
+    }
+
+    .card img {
+        height: clamp(112px, 32vw, 150px);
+        border-radius: 10px;
+        margin-bottom: 10px;
+    }
+
+    .card h3 {
+        font-size: 1rem;
+        line-height: 1.35;
+        margin: 6px 0 4px;
+    }
+
+    .card p {
+        font-size: 1rem;
+        margin: 0 0 10px;
+    }
+
+    .card button {
+        min-height: 42px;
+        padding: 10px 8px;
+        letter-spacing: 0;
+        font-size: 14px;
+    }
+
+    .popup,
+    .modal {
+        padding: 12px;
+        overflow-y: auto;
+    }
+
+    .modal-box {
+        width: 100%;
+        max-width: 420px;
+        max-height: calc(100vh - 24px);
+        margin: 0 auto;
+        padding: 22px 18px;
+        overflow-y: auto;
+        border-radius: 16px;
+    }
+
+    #favoriteModal .modal-box {
+        width: 100%;
+        max-width: 460px;
+    }
+}
+
+@media (max-width: 520px) {
+    .products {
+        gap: 12px;
+        width: 94%;
+    }
+
+    .favorite-item {
+        display: grid;
+        grid-template-columns: 58px 1fr;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .favorite-remove-btn {
+        grid-column: 2;
+        width: 100% !important;
+        min-height: 36px;
+    }
+
+    .popup-content.product-popup-content {
+        width: 100% !important;
+        max-width: 420px !important;
+    }
+}
+
+@media (max-width: 360px) {
+    .products {
+        grid-template-columns: 1fr;
+    }
+
+    .card img {
+        height: 160px;
+    }
 }
 
 /* 修正彈窗內的按鈕對齊問題 */
