@@ -246,9 +246,69 @@ border-radius:20px;
 color:black;
 }
 
+.product-popup-content {
+    box-sizing: border-box;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
 .popup-content img{
 width:220px;
 border-radius:15px;
+}
+
+@media (max-width: 700px) {
+    .popup-content.product-popup-content {
+        width: min(92vw, 430px) !important;
+        max-width: 92vw !important;
+        margin: 24px auto !important;
+        padding: 18px !important;
+    }
+
+    .product-popup-layout {
+        display: block !important;
+        margin-top: 14px !important;
+    }
+
+    .product-popup-image-wrap {
+        margin-bottom: 16px;
+    }
+
+    .product-popup-image {
+        max-width: 190px !important;
+    }
+
+    .product-popup-info {
+        display: block !important;
+    }
+
+    .popup-qty-control {
+        gap: 10px !important;
+        margin: 14px 0 !important;
+    }
+
+    #pname {
+        font-size: 22px !important;
+    }
+
+    #ptext {
+        font-size: 15px;
+    }
+
+    #pprice {
+        font-size: 20px !important;
+    }
+}
+
+@media (max-width: 420px) {
+    .popup-content.product-popup-content {
+        margin: 12px auto !important;
+        padding: 14px !important;
+    }
+
+    .product-popup-image {
+        max-width: 160px !important;
+    }
 }
 /* login register modal */
 
@@ -294,6 +354,54 @@ cursor:pointer;
 .modal-box p{
 cursor:pointer;
 color:#5b2c1a;
+}
+
+#favoriteModal .modal-box {
+    width: min(90vw, 460px);
+}
+
+.favorite-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(91, 44, 26, 0.25);
+    color: black;
+    text-align: left;
+}
+
+.favorite-item-img {
+    width: 58px;
+    height: 58px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: #faedcd;
+    flex: 0 0 auto;
+}
+
+.favorite-item-info {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.favorite-item-info strong {
+    color: #3b2f2f;
+}
+
+.favorite-item-info span {
+    color: #5b2c1a;
+    font-size: 14px;
+}
+
+.favorite-remove-btn {
+    width: auto !important;
+    padding: 6px 10px !important;
+    border-radius: 12px !important;
+    background: #d9534f !important;
+    flex: 0 0 auto;
 }
 
 .close{

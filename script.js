@@ -1,11 +1,8 @@
 // ==========================================
 // 1. 基本設定與初始化
 // ==========================================
-// 後端 API 的網址 (請確保這是你 Render 的最新網址)
-// 自動判斷環境：如果是 localhost 就是開發環境，否則就是 Render 正式環境
-const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-    ? 'http://localhost:3000/api'               // 本地開發用
-    : 'https://retro-snacks-v2.onrender.com/api'; // Render 正式用
+// 後端 API 的網址集中在 config.js，避免不同頁面各自寫死。
+const API_URL = window.RETRO_SNACKS_CONFIG.API_URL;
 
 console.log("當前連線的 API 網址是:", API_URL);
 
@@ -150,7 +147,7 @@ function showProduct(product) {
     document.getElementById("popupAddBtn").onclick = function() {
         let qty = parseInt(document.getElementById("popupQty").value);
         let selectedOption = optionSection.style.display === "block" ? optionSelect.value : "";
-        addToFavorites(product.name, product.price, qty, selectedOption);
+        addToFavorites(product.name, product.price, qty, selectedOption, product.image);
         closePopup();
     };
 }
@@ -205,18 +202,20 @@ function searchProduct() {
 // ==========================================
 // 6. 收藏系統 (儲存在 localStorage)
 // ==========================================
-function addToFavorites(name, price, qty, option) {
+function addToFavorites(name, price, qty, option, image) {
     let favorites = JSON.parse(localStorage.getItem("favorites")) || [];
     
     const existingItem = favorites.find(item => item.name === name && item.option === option);
     if (existingItem) {
         existingItem.quantity = qty;
+        existingItem.image = image;
     } else {
         // 把選擇的商品資訊存進收藏
         favorites.push({ 
             name: name, 
             price: price, 
             quantity: qty, 
+            image: image,
             option: option // 口味
         });
     }
@@ -237,11 +236,17 @@ function openFavorites() {
     let html = "";
 
     favorites.forEach((item, i) => {
+        const imageSrc = item.image || "images/logo.jpg";
         html += `
-            <p style="color: black; border-bottom: 1px solid #ddd; padding: 10px 0;">
-                ${item.name} ${item.option ? '('+item.option+')' : ''} - $${item.price} x ${item.quantity}
-                <button onclick="removeFavorite(${i})" style="float: right; background: #d9534f; padding: 2px 8px;">刪除</button>
-            </p>
+            <div class="favorite-item">
+                <img class="favorite-item-img" src="${imageSrc}" alt="${item.name}" onerror="this.src='images/logo.jpg'">
+                <div class="favorite-item-info">
+                    <strong>${item.name}</strong>
+                    <span>${item.option ? '('+item.option+')' : '未選口味'}</span>
+                    <span>$${item.price} x ${item.quantity}</span>
+                </div>
+                <button class="favorite-remove-btn" onclick="removeFavorite(${i})">刪除</button>
+            </div>
         `;
     });
 
@@ -328,10 +333,29 @@ async function login() {
         if (data.success) {
             localStorage.setItem("loginUser", data.user.username);
             localStorage.setItem("authToken", data.token);
+            sessionStorage.removeItem("loginStatusNoticeShown");
             alert("登入成功！");
             location.reload(); // 重新整理來顯示頭像
         } else { alert("失敗：" + data.message); }
     } catch (err) { alert("連線錯誤"); }
+}
+
+function isTokenExpired(token) {
+    try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        return payload.exp && payload.exp * 1000 < Date.now();
+    } catch (err) {
+        return true;
+    }
+}
+
+function clearLoginState(message) {
+    localStorage.removeItem("loginUser");
+    localStorage.removeItem("authToken");
+    if (message && !sessionStorage.getItem("loginStatusNoticeShown")) {
+        sessionStorage.setItem("loginStatusNoticeShown", "true");
+        alert(message);
+    }
 }
 
 // 根據登入狀態切換右上角按鈕
@@ -343,7 +367,7 @@ function showUser() {
     let cartBtn = document.getElementById("cartBtn");
     let userArea = document.getElementById("userArea");
 
-    if (user && token) {
+    if (user && token && !isTokenExpired(token)) {
         userArea.innerHTML = `
             <img src="images/user-icon.jpg" style="width: 50px; height: 50px; border-radius: 50%; cursor: pointer; border: 2px solid #fff;" 
                  onclick="location.href='profile.html'" title="個人資訊">
@@ -352,8 +376,9 @@ function showUser() {
         if (regBtn) regBtn.style.display = "none";
         if (cartBtn) cartBtn.style.display = "inline-flex";
     } else {
-        localStorage.removeItem("loginUser");
-        localStorage.removeItem("authToken");
+        if (user || token) {
+            clearLoginState("登入狀態已失效，請重新登入。");
+        }
         userArea.innerHTML = "";
         if (loginBtn) loginBtn.style.display = "inline-block";
         if (regBtn) regBtn.style.display = "inline-block";

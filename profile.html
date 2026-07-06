@@ -140,12 +140,10 @@
         </div>
     </div>
 
+    <script src="config.js"></script>
     <script>
         // 設定 API 網址
-        // 自動判斷環境：如果是 localhost 就是開發環境，否則就是 Render 正式環境
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? 'http://localhost:3000/api'               // 本地開發用
-            : 'https://retro-snacks-v2.onrender.com/api'; // Render 正式用
+        const API_URL = window.RETRO_SNACKS_CONFIG.API_URL;
 
         console.log("當前連線的 API 網址是:", API_URL);
 
