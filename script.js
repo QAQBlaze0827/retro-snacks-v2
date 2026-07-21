@@ -16,7 +16,7 @@ window.onload = function() {
 // ==========================================
 // 2. 首頁 Banner 輪播圖
 // ==========================================
-let images = ["images/banner1.jpg", "images/banner2.jpg", "images/banner3.jpg"];
+let images = ["images/banner1.png", "images/banner2.png", "images/banner3.png"];
 let index = 0;
 setInterval(() => {
     index++;
@@ -176,6 +176,18 @@ window.onclick = function(event) {
     const dropdown = document.getElementById("myDropdown");
     if (dropdown && dropdown.classList.contains('show')) {
         dropdown.classList.remove('show');
+    }
+
+    if (event.target.id === "popup") {
+        closePopup();
+    }
+
+    if (event.target.id === "favoriteModal") {
+        closeFavorites();
+    }
+
+    if (event.target.id === "loginModal" || event.target.id === "registerModal") {
+        closeModal();
     }
 }
 

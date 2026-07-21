@@ -6,15 +6,42 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-// 引入 Resend
-const { Resend } = require('resend');
-const resend = new Resend(process.env.RESEND_API_KEY);
+// 引入 SendGrid Web API，不使用 SMTP，避免 Render 免費方案封鎖 SMTP port。
+const sgMail = require('@sendgrid/mail');
 
 const app = express();
 const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL;
+const SENDGRID_FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Retro Snacks Shop';
+
+if (SENDGRID_API_KEY) {
+    sgMail.setApiKey(SENDGRID_API_KEY);
+}
 
 if (!process.env.JWT_SECRET) {
     console.warn('⚠️ JWT_SECRET 未設定，目前使用開發用預設值。正式部署請在 Render 設定 JWT_SECRET。');
+}
+
+if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
+    console.warn('⚠️ SendGrid 尚未完整設定，請在 Render 設定 SENDGRID_API_KEY 與 SENDGRID_FROM_EMAIL。');
+}
+
+async function sendVerificationEmail(email, username, code) {
+    if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
+        throw new Error('SendGrid environment variables are missing');
+    }
+
+    await sgMail.send({
+        to: email,
+        from: {
+            email: SENDGRID_FROM_EMAIL,
+            name: SENDGRID_FROM_NAME
+        },
+        subject: '您的註冊驗證碼',
+        text: `哈囉 ${username}！您的驗證碼是：${code}。驗證碼 5 分鐘內有效。`,
+        html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1><p>驗證碼 5 分鐘內有效。</p>`
+    });
 }
 
 // Middleware
@@ -239,17 +266,12 @@ app.post('/api/register', async (req, res) => {
 
         await newUser.save();
 
-        // 使用 Resend 寄信
+        // 使用 SendGrid Web API 寄信
         try {
-            await resend.emails.send({
-                from: 'onboarding@resend.dev',
-                to: email, 
-                subject: '您的註冊驗證碼',
-                html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1>`
-            });
+            await sendVerificationEmail(email, username, code);
             console.log(`🚀 驗證碼已寄至: ${email}`);
         } catch (mailErr) {
-            console.error("❌ Resend 寄信失敗 (可能受限沙盒模式):", mailErr.message);
+            console.error("❌ SendGrid 寄信失敗:", mailErr.message);
         }
 
         return res.status(201).json({ success: true });

@@ -148,15 +148,22 @@ background:#7f5539;
 /* banner */
 
 .banner{
-width:80%;
+width:min(86%, 1320px);
 margin:20px auto;
+background:#3b2f2f;
+border-radius:20px;
+overflow:hidden;
+aspect-ratio:1866 / 843;
+max-height:320px;
 }
 
 .banner img{
 width:100%;
-height:320px;
-object-fit:cover;
+height:100%;
+object-fit:contain;
+object-position:center;
 border-radius:20px;
+display:block;
 }
 
 /* products */
@@ -648,4 +655,3 @@ input[type=number] {
     margin-left: 0 !important; /* 強制取消左邊距 */
     box-sizing: border-box;    /* 確保 padding 不會撐開寬度 */
 }
-
