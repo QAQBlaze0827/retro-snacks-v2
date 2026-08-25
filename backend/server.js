@@ -90,7 +90,7 @@ const initialProducts = [
     { 
         name: "養樂多", 
         price: 10, 
-        image: "images/yakult.jpg", 
+        image: "images/yakult_1.jpg", 
         category: "drink", 
         description: "陪伴大家長大的發酵乳",
         sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
@@ -104,7 +104,7 @@ const initialProducts = [
         // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
         options: [
             { flavor: "草莓", sketchfabUrl: "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44" },
-            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/88248ae4978c4272b4dccbb1232bd852" },
+            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/e30b75dca21d4abfb47c8b0c9751dab1" },
             { flavor: "藍莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
             { flavor: "荔枝", sketchfabUrl: "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99" }
         ]
@@ -120,7 +120,7 @@ const initialProducts = [
     { 
         name: "CC樂", 
         price: 12, 
-        image: "images/cc.jpg", 
+        image: "images/cc_1.jpg", 
         category: "candy", 
         description: "管狀彩色糖果，小朋友的最愛",
         sketchfabUrl: "https://sketchfab.com/3d-models/cc-0d7e0d9d47634765a5bc464d5d07947f"
@@ -128,7 +128,7 @@ const initialProducts = [
     { 
         name: "麥香系列", 
         price: 15, 
-        image: "images/maixiang.jpg", 
+        image: "images/maixiang_1.jpg", 
         category: "drink", 
         description: "熟悉的麥香最對味",
         // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
