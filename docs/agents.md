@@ -40,7 +40,11 @@
 - 手機操作上，彈窗背景遮罩可點擊關閉；這段邏輯在 `script.js` 的 `window.onclick`。
 - 註冊驗證碼畫面已補上「若沒收到驗證信，請到垃圾郵件查找」提醒，因 SendGrid Single Sender 寄出的信可能進垃圾郵件。
 - `images/` 近期新增商品圖 `yakult_1.jpg`、`cc_1.jpg`、`maixiang_1.jpg`，後端初始商品資料已改用這些新圖片。
-- `backend/server.js` 的 `initialProducts` 有更新部分 Sketchfab 3D 模型網址；如果正式 MongoDB 已經有舊商品資料，這些初始資料變更不會自動覆蓋 Atlas 既有資料。
+- `backend/server.js` 的 `initialProducts` 有更新部分 Sketchfab 3D 模型網址，啟動後會透過商品名稱同步到 MongoDB。
+- `images/` 目前也新增 `ramune_1.jpg`、`guoliduo_1.jpg`、`milk_candy_1.jpg`、`pudding_1.jpg`、`coke_1.jpg`，後端商品資料已改用這些 `_1` 新圖片。
+- 後端商品清單新增「復古機器人」與「陀螺」，圖片分別使用 `images/robot.jpg` 與 `images/top.jpg`，分類為 `toy`。
+- 「復古機器人」與「陀螺」的 Sketchfab 模型尚未完成，目前 `sketchfabUrl` 先放 `https://sketchfab.com/`。
+- `backend/server.js` 啟動後會用商品名稱同步 `initialProducts` 到 MongoDB，透過 upsert 新增缺少的商品並更新既有商品圖片、價格、描述、分類與 Sketchfab 連結。
 
 ## API 設定
 
@@ -77,9 +81,9 @@ PORT=<Render usually provides this automatically>
 - `users`：會員帳號、bcrypt 密碼 hash、Email、驗證狀態、生日、電話、偏好。
 - `products`：商品名稱、價格、圖片路徑、分類、描述、Sketchfab 連結、口味選項。
 
-後端啟動並成功連線 MongoDB 後，會檢查 `products` 是否為空；如果是空的，會匯入 `backend/server.js` 裡的 `initialProducts`。
+後端啟動並成功連線 MongoDB 後，會依商品名稱同步 `backend/server.js` 裡的 `initialProducts`。
 
-如果修改 `initialProducts`，不會自動更新已存在的正式資料庫商品，除非手動清空資料或另外寫 migration。
+目前同步方式會使用 upsert：商品名稱已存在就更新資料，商品名稱不存在就新增。修改 `initialProducts` 會影響正式 MongoDB Atlas 的商品資料，更新前要確認不會覆蓋手動編輯過的商品內容。
 
 ## 本地開發
 

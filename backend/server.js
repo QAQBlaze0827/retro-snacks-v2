@@ -58,7 +58,7 @@ const initialProducts = [
     { 
         name: "彈珠汽水", 
         price: 30, 
-        image: "images/ramune.jpg", 
+        image: "images/ramune_1.jpg", 
         category: "drink", 
         description: "復古玻璃瓶裝，內含彈珠的經典汽水",
         sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" // 沒有口味的，直接放最外層
@@ -66,7 +66,7 @@ const initialProducts = [
     { 
         name: "果粒多", 
         price: 25, 
-        image: "images/guoliduo.jpg", 
+        image: "images/guoliduo_1.jpg", 
         category: "drink", 
         description: "滿滿果粒的清爽果汁",
         sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
@@ -74,7 +74,7 @@ const initialProducts = [
     { 
         name: "牛奶糖", 
         price: 15, 
-        image: "images/milk_candy.jpg", 
+        image: "images/milk_candy_1.jpg", 
         category: "candy", 
         description: "濃郁奶香，入口即化的甜蜜滋味",
         sketchfabUrl: "https://sketchfab.com/3d-models/5df91043388c4a2dbb4201e08a9a6a99"
@@ -82,7 +82,7 @@ const initialProducts = [
     { 
         name: "布丁", 
         price: 20, 
-        image: "images/pudding.jpg", 
+        image: "images/pudding_1.jpg", 
         category: "candy", 
         description: "古早味雞蛋布丁",
         sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
@@ -112,7 +112,7 @@ const initialProducts = [
     { 
         name: "可口可樂糖", 
         price: 10, 
-        image: "images/coke.jpg", 
+        image: "images/coke_1.jpg", 
         category: "candy", 
         description: "可樂形狀的硬糖，香甜可口",
         sketchfabUrl: "https://sketchfab.com/3d-models/387be1a9b7eb460c85619d7343e14fac"
@@ -137,6 +137,22 @@ const initialProducts = [
             { flavor: "綠茶", sketchfabUrl: "https://sketchfab.com/3d-models/0ebaead5934542559a4551928a96e7a0" },
             { flavor: "奶茶", sketchfabUrl: "https://sketchfab.com/3d-models/c7e4f6e4b1204b2eb6932be688ca87c6" }
         ]
+    },
+    {
+        name: "復古機器人",
+        price: 50,
+        image: "images/robot.jpg",
+        category: "toy",
+        description: "經典造型的復古玩具機器人",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "陀螺",
+        price: 20,
+        image: "images/top.jpg",
+        category: "toy",
+        description: "童年常見的經典旋轉玩具",
+        sketchfabUrl: "https://sketchfab.com/"
     }
 ];
 
@@ -144,13 +160,17 @@ mongoose.connect(dbUrl)
     .then(async () => {
         console.log('✅ MongoDB Connected');
         
-        // 自動檢查並匯入商品
-        const count = await Product.countDocuments();
-        if (count === 0) {
-            console.log('🚀 資料庫商品為空，正在匯入初始資料...');
-            await Product.insertMany(initialProducts);
-            console.log('✅ 商品資料匯入成功！');
-        }
+        // 依商品名稱同步初始商品，讓新圖片、3D 連結與新增商品能更新到雲端資料庫。
+        await Product.bulkWrite(
+            initialProducts.map(product => ({
+                updateOne: {
+                    filter: { name: product.name },
+                    update: { $set: product },
+                    upsert: true
+                }
+            }))
+        );
+        console.log('✅ 商品資料同步成功！');
     })
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
