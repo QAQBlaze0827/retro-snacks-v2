@@ -214,7 +214,7 @@ transform:scale(1.05);
 .card img {
     width: 100%;
     height: 180px; /* 固定高度，避免圖片大小不一導致卡片跳動 */
-    object-fit: cover;
+    object-fit: contain;
     border-radius: 12px;
     background-color: #faedcd; /* 沒圖片時顯示的底色 */
     margin-bottom: 15px;

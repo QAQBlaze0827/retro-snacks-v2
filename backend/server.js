@@ -98,7 +98,7 @@ const initialProducts = [
     { 
         name: "飛壘口香糖", 
         price: 10, 
-        image: "images/feilei.jpg", 
+        image: "images/feilei_1.jpg", 
         category: "candy", 
         description: "可以吹出超大泡泡的經典口香糖",
         // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
@@ -141,7 +141,7 @@ const initialProducts = [
     {
         name: "復古機器人",
         price: 50,
-        image: "images/robot.jpg",
+        image: "images/robot_1.jpg",
         category: "toy",
         description: "經典造型的復古玩具機器人",
         sketchfabUrl: "https://sketchfab.com/"
@@ -149,7 +149,7 @@ const initialProducts = [
     {
         name: "陀螺",
         price: 20,
-        image: "images/top.jpg",
+        image: "images/top_1.jpg",
         category: "toy",
         description: "童年常見的經典旋轉玩具",
         sketchfabUrl: "https://sketchfab.com/"
