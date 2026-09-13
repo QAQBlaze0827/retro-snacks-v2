@@ -539,7 +539,7 @@ input[type=number] {
 
     .search {
         flex: 0 0 100%;
-        order: 5;
+        order: 10;
         width: 100%;
         min-width: 0;
         margin: 4px 0 0;
