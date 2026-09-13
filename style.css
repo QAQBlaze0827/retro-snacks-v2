@@ -506,6 +506,13 @@ input[type=number] {
         height: 42px;
     }
 
+    #userArea:empty {
+        display: none;
+        width: 0;
+        height: 0;
+        margin-left: 0;
+    }
+
     #userArea img {
         display: block;
         width: 42px !important;
