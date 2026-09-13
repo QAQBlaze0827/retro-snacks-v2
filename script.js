@@ -11,6 +11,7 @@ window.onload = function() {
     fetchProducts();    // 1. 去資料庫抓商品
     showUser();         // 2. 檢查有沒有登入，更新右上角
     updateFavoriteCount();  // 3. 更新收藏圖示數字
+    updateBannerLink(); // 4. 設定活動 Banner 入口
 };
 
 // ==========================================
@@ -18,11 +19,25 @@ window.onload = function() {
 // ==========================================
 let images = ["images/banner1.png", "images/banner2.png", "images/banner3.png"];
 let index = 0;
+
+function updateBannerLink() {
+    const banner = document.querySelector(".banner");
+    if (!banner) return;
+
+    const isHoleGameBanner = images[index] === "images/banner2.png";
+    banner.classList.toggle("banner-clickable", isHoleGameBanner);
+    banner.title = isHoleGameBanner ? "前往洞洞樂活動" : "";
+    banner.onclick = isHoleGameBanner
+        ? function() { location.href = "hole-game.html"; }
+        : null;
+}
+
 setInterval(() => {
     index++;
     if (index >= images.length) index = 0;
     const slide = document.getElementById("slide");
     if (slide) slide.src = images[index];
+    updateBannerLink();
 }, 3000); // 3秒換一張
 
 // ==========================================

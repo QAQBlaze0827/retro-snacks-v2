@@ -25,6 +25,8 @@
 - 首頁顯示商品列表，商品資料由後端 `GET /api/products` 取得。
 - 商品支援分類篩選、搜尋、商品介紹彈窗、數量選擇、部分商品口味選項與 Sketchfab 3D 連結。
 - 收藏資料目前存在瀏覽器 `localStorage`，尚未存到 MongoDB。
+- 首頁輪播到 `banner2.png` 時可點擊進入 `hole-game.html` 洞洞樂活動頁。
+- 洞洞樂採九宮格戳洞玩法，需登入，每個會員每天限玩一次，結果會寫入 MongoDB。
 - 會員功能包含註冊、Email 驗證、登入、JWT token、個人資料讀取與更新。
 - `profile.html` 會透過 JWT 呼叫 `GET /api/user/me` 與 `PUT /api/user/update`。
 - 商品介紹、收藏、登入、註冊彈窗支援點擊背景遮罩關閉，不一定要按右上角叉叉。
@@ -45,6 +47,10 @@
 - 後端商品清單新增「復古機器人」與「陀螺」，圖片分別使用 `images/robot.jpg` 與 `images/top.jpg`，分類為 `toy`。
 - 「復古機器人」與「陀螺」的 Sketchfab 模型尚未完成，目前 `sketchfabUrl` 先放 `https://sketchfab.com/`。
 - `backend/server.js` 啟動後會用商品名稱同步 `initialProducts` 到 MongoDB，透過 upsert 新增缺少的商品並更新既有商品圖片、價格、描述、分類與 Sketchfab 連結。
+- 新增洞洞樂活動：`hole-game.html`、`hole-game.js`、`GET /api/hole-game/status`、`GET /api/hole-game/records`、`POST /api/hole-game/play`。
+- 洞洞樂新增 `holeprizes` 獎品池與 `rewardrecords` 中獎紀錄；獎品池目前固定為 `5 元折價券`、`10 元折價券`、`神秘小禮`、`再接再厲`。
+- 洞洞樂每日限制以台灣時區 `Asia/Taipei` 的日期字串判斷，`rewardrecords` 對 `userId + playDate` 建唯一索引。
+- 洞洞樂頁面會顯示「我的中獎紀錄」，資料來自 `GET /api/hole-game/records`。
 
 ## API 設定
 
@@ -80,6 +86,8 @@ PORT=<Render usually provides this automatically>
 
 - `users`：會員帳號、bcrypt 密碼 hash、Email、驗證狀態、生日、電話、偏好。
 - `products`：商品名稱、價格、圖片路徑、分類、描述、Sketchfab 連結、口味選項。
+- `holeprizes`：洞洞樂獎品池，包含獎品名稱、是否中獎、抽中權重。
+- `rewardrecords`：洞洞樂遊玩紀錄，記錄會員、獎品、是否中獎、遊玩日期與建立時間。
 
 後端啟動並成功連線 MongoDB 後，會依商品名稱同步 `backend/server.js` 裡的 `initialProducts`。
 

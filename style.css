@@ -166,6 +166,14 @@ border-radius:20px;
 display:block;
 }
 
+.banner-clickable {
+    cursor: pointer;
+}
+
+.banner-clickable:hover {
+    filter: brightness(1.05);
+}
+
 /* products */
 
 .products-section {
@@ -652,4 +660,235 @@ input[type=number] {
 .popup-content button {
     margin-left: 0 !important; /* 強制取消左邊距 */
     box-sizing: border-box;    /* 確保 padding 不會撐開寬度 */
+}
+
+/* hole game */
+
+.hole-game-header {
+    justify-content: space-between;
+    padding: 14px 22px;
+}
+
+.hole-game-header h1 {
+    margin: 0;
+    font-size: 28px;
+}
+
+.hole-game-back,
+.hole-game-link {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    background: #9c6644;
+    padding: 10px 18px;
+    border-radius: 20px;
+}
+
+.hole-game-back:hover,
+.hole-game-link:hover {
+    background: #7f5539;
+}
+
+.hole-game-user {
+    min-width: 120px;
+    text-align: right;
+    color: #faedcd;
+    font-weight: bold;
+}
+
+.hole-game-page {
+    width: min(92%, 980px);
+    margin: 28px auto;
+}
+
+.hole-game-panel {
+    background: #d4a373;
+    color: #2f2424;
+    border: 2px solid #8a5737;
+    border-radius: 18px;
+    padding: 28px;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.25);
+}
+
+.hole-game-copy {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto 22px;
+}
+
+.hole-game-kicker {
+    margin: 0 0 8px;
+    color: #6b3e2e;
+    font-weight: bold;
+}
+
+.hole-game-copy h2 {
+    margin: 0 0 10px;
+    font-size: 30px;
+}
+
+.hole-game-copy p:last-child {
+    margin: 0;
+    line-height: 1.6;
+}
+
+.hole-game-status {
+    min-height: 24px;
+    margin: 16px auto;
+    text-align: center;
+    font-weight: bold;
+    color: #5b2c1a;
+}
+
+.hole-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 16px;
+    width: min(100%, 560px);
+    margin: 0 auto;
+}
+
+.hole-cell {
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 8px solid #6b3e2e;
+    background:
+        radial-gradient(circle at 50% 45%, #2f2424 0 42%, #7f5539 43% 56%, #faedcd 57% 100%);
+    color: #faedcd;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.hole-cell:hover:not(:disabled) {
+    transform: translateY(-3px);
+    filter: brightness(1.08);
+}
+
+.hole-cell:disabled {
+    cursor: default;
+    opacity: 0.72;
+}
+
+.hole-cell.is-opening,
+.hole-cell.is-open {
+    border-radius: 16px;
+    background: #faedcd;
+    color: #5b2c1a;
+    border-color: #9c6644;
+    padding: 8px;
+}
+
+.hole-cell.is-open {
+    opacity: 1;
+}
+
+.hole-game-result {
+    min-height: 58px;
+    margin: 22px auto 0;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+}
+
+.hole-game-result strong {
+    color: #d9534f;
+    font-size: 22px;
+}
+
+.hole-game-result span {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.hole-history {
+    width: min(100%, 560px);
+    margin: 26px auto 0;
+    padding-top: 18px;
+    border-top: 1px solid rgba(91, 44, 26, 0.28);
+}
+
+.hole-history h3 {
+    margin: 0 0 12px;
+    text-align: center;
+    color: #3b2f2f;
+}
+
+.hole-history-list {
+    display: grid;
+    gap: 10px;
+}
+
+.hole-history-item,
+.hole-history-empty {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #faedcd;
+    color: #3b2f2f;
+}
+
+.hole-history-item strong {
+    color: #5b2c1a;
+}
+
+.hole-history-item span,
+.hole-history-empty {
+    color: #6b3e2e;
+    font-size: 14px;
+}
+
+@media (max-width: 700px) {
+    .hole-game-header {
+        gap: 10px;
+    }
+
+    .hole-game-header h1 {
+        width: 100%;
+        order: 3;
+        text-align: center;
+        font-size: 24px;
+    }
+
+    .hole-game-back {
+        order: 1;
+    }
+
+    .hole-game-user {
+        order: 2;
+        min-width: 0;
+        margin-left: auto;
+    }
+
+    .hole-game-page {
+        width: 94%;
+        margin: 16px auto;
+    }
+
+    .hole-game-panel {
+        padding: 20px 14px;
+        border-radius: 14px;
+    }
+
+    .hole-game-copy h2 {
+        font-size: 24px;
+    }
+
+    .hole-grid {
+        gap: 10px;
+    }
+
+    .hole-cell {
+        border-width: 6px;
+        font-size: 18px;
+    }
 }

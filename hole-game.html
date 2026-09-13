@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>洞洞樂 - 拾憶</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="hole-game-header">
+        <a href="index.html" class="hole-game-back">返回首頁</a>
+        <h1>洞洞樂</h1>
+        <span id="holeGameUser" class="hole-game-user"></span>
+    </header>
+
+    <main class="hole-game-page">
+        <section class="hole-game-panel">
+            <div class="hole-game-copy">
+                <p class="hole-game-kicker">每日懷舊小活動</p>
+                <h2>戳一格，看看今天拿到什麼獎品</h2>
+                <p>每個會員每天限玩一次。抽到的結果會記錄在會員帳號裡，重新整理後也會保留今天的結果。</p>
+            </div>
+
+            <div id="holeGameStatus" class="hole-game-status">讀取活動狀態中...</div>
+
+            <div id="holeGrid" class="hole-grid" aria-label="洞洞樂九宮格"></div>
+
+            <div id="holeGameResult" class="hole-game-result" aria-live="polite"></div>
+
+            <section class="hole-history">
+                <h3>我的中獎紀錄</h3>
+                <div id="holeGameHistory" class="hole-history-list">登入後可查看紀錄。</div>
+            </section>
+        </section>
+    </main>
+
+    <script src="config.js"></script>
+    <script src="hole-game.js"></script>
+</body>
+</html>

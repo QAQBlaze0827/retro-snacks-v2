@@ -156,6 +156,48 @@ const initialProducts = [
     }
 ];
 
+const initialHolePrizes = [
+    { name: "5 元折價券", isWinner: true, weight: 35 },
+    { name: "10 元折價券", isWinner: true, weight: 20 },
+    { name: "神秘小禮", isWinner: true, weight: 10 },
+    { name: "再接再厲", isWinner: false, weight: 35 }
+];
+
+function getTaipeiDateString(date = new Date()) {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Taipei',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).formatToParts(date);
+
+    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
+    return `${values.year}-${values.month}-${values.day}`;
+}
+
+function publicRewardRecord(record) {
+    if (!record) return null;
+    return {
+        prizeName: record.prizeName,
+        isWinner: record.isWinner,
+        playDate: record.playDate,
+        createdAt: record.createdAt
+    };
+}
+
+function pickPrize(prizes) {
+    const totalWeight = prizes.reduce((sum, prize) => sum + Math.max(prize.weight || 0, 0), 0);
+    if (totalWeight <= 0) return prizes[0];
+
+    let target = Math.random() * totalWeight;
+    for (const prize of prizes) {
+        target -= Math.max(prize.weight || 0, 0);
+        if (target <= 0) return prize;
+    }
+
+    return prizes[prizes.length - 1];
+}
+
 mongoose.connect(dbUrl)
     .then(async () => {
         console.log('✅ MongoDB Connected');
@@ -171,6 +213,17 @@ mongoose.connect(dbUrl)
             }))
         );
         console.log('✅ 商品資料同步成功！');
+
+        await HolePrize.bulkWrite(
+            initialHolePrizes.map(prize => ({
+                updateOne: {
+                    filter: { name: prize.name },
+                    update: { $set: prize },
+                    upsert: true
+                }
+            }))
+        );
+        console.log('✅ 洞洞樂獎品資料同步成功！');
     })
     .catch(err => console.error('❌ MongoDB Connection Error:', err));
 
@@ -208,6 +261,24 @@ const productSchema = new mongoose.Schema({
     ]
 });
 const Product = mongoose.model('Product', productSchema);
+
+const holePrizeSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    isWinner: { type: Boolean, default: true },
+    weight: { type: Number, default: 1 }
+});
+const HolePrize = mongoose.model('HolePrize', holePrizeSchema);
+
+const rewardRecordSchema = new mongoose.Schema({
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+    username: { type: String, required: true },
+    prizeName: { type: String, required: true },
+    isWinner: { type: Boolean, default: true },
+    playDate: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+rewardRecordSchema.index({ userId: 1, playDate: 1 }, { unique: true });
+const RewardRecord = mongoose.model('RewardRecord', rewardRecordSchema);
 
 function createToken(user) {
     return jwt.sign(
@@ -258,6 +329,90 @@ app.get('/api/products', async (req, res) => {
         res.json(products);
     } catch (err) {
         res.status(500).json({ success: false, message: "抓取商品失敗" });
+    }
+});
+
+// --- 洞洞樂活動 API ---
+
+app.get('/api/hole-game/status', authenticateToken, async (req, res) => {
+    try {
+        const playDate = getTaipeiDateString();
+        const record = await RewardRecord.findOne({ userId: req.user.id, playDate });
+
+        res.json({
+            success: true,
+            played: Boolean(record),
+            record: publicRewardRecord(record)
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: '讀取洞洞樂狀態失敗' });
+    }
+});
+
+app.get('/api/hole-game/records', authenticateToken, async (req, res) => {
+    try {
+        const records = await RewardRecord.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .limit(30);
+
+        res.json({
+            success: true,
+            records: records.map(publicRewardRecord)
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ success: false, message: '讀取中獎紀錄失敗' });
+    }
+});
+
+app.post('/api/hole-game/play', authenticateToken, async (req, res) => {
+    try {
+        const playDate = getTaipeiDateString();
+        const existingRecord = await RewardRecord.findOne({ userId: req.user.id, playDate });
+        if (existingRecord) {
+            return res.status(400).json({
+                success: false,
+                played: true,
+                message: '今天已經玩過洞洞樂了',
+                record: publicRewardRecord(existingRecord)
+            });
+        }
+
+        const prizes = await HolePrize.find().lean();
+        if (prizes.length === 0) {
+            return res.status(500).json({ success: false, message: '洞洞樂獎品尚未設定' });
+        }
+
+        const prize = pickPrize(prizes);
+        const record = await RewardRecord.create({
+            userId: req.user.id,
+            username: req.user.username,
+            prizeName: prize.name,
+            isWinner: prize.isWinner,
+            playDate
+        });
+
+        res.status(201).json({
+            success: true,
+            played: true,
+            message: '洞洞樂抽獎完成',
+            record: publicRewardRecord(record)
+        });
+    } catch (err) {
+        if (err.code === 11000) {
+            const playDate = getTaipeiDateString();
+            const record = await RewardRecord.findOne({ userId: req.user.id, playDate });
+            return res.status(400).json({
+                success: false,
+                played: true,
+                message: '今天已經玩過洞洞樂了',
+                record: publicRewardRecord(record)
+            });
+        }
+
+        console.error(err);
+        res.status(500).json({ success: false, message: '洞洞樂抽獎失敗' });
     }
 });
 
