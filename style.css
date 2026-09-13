@@ -457,6 +457,7 @@ input[type=number] {
     header {
         flex-wrap: wrap;
         align-items: center;
+        gap: 8px;
         padding: 8px 10px 12px;
         border-radius: 0 0 16px 16px;
     }
@@ -474,28 +475,30 @@ input[type=number] {
         height: 56px;
         margin: 0 4px;
         order: 2;
+        flex: 0 0 auto;
     }
 
     #loginBtn,
     #regBtn {
-        padding: 9px 12px;
+        padding: 9px 14px;
         margin: 0;
         font-size: 14px;
         white-space: nowrap;
+        flex: 0 0 auto;
     }
 
     #loginBtn {
         margin-left: auto;
-        order: 3;
+        order: 4;
     }
 
     #regBtn {
-        order: 4;
+        order: 5;
     }
 
     #userArea {
         margin-left: auto;
-        order: 3;
+        order: 4;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -516,7 +519,7 @@ input[type=number] {
         width: 42px;
         height: 42px;
         margin-left: 4px;
-        order: 4;
+        order: 5;
         flex: 0 0 auto;
     }
 
@@ -622,6 +625,21 @@ input[type=number] {
 }
 
 @media (max-width: 520px) {
+    header {
+        column-gap: 8px;
+    }
+
+    #loginBtn,
+    #regBtn {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 54px;
+    }
+
+    #loginBtn {
+        margin-left: auto;
+    }
+
     .products {
         gap: 12px;
         width: 94%;
