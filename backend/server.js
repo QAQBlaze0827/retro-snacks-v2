@@ -153,6 +153,38 @@ const initialProducts = [
         category: "toy",
         description: "童年常見的經典旋轉玩具",
         sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "魯班鎖",
+        price: 100,
+        image: "images/Lubanlock.jpg",
+        category: "toy",
+        description: "童年常見的經典益智玩具",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "健達出奇蛋",
+        price: 40,
+        image: "images/Kinder_Surprise.jpg",
+        category: "candy",
+        description: "巧克力外殼內含驚喜玩具的經典糖果",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "小瓜呆脆笛酥",
+        price: 50,
+        image: "images/Wafer_Rolls.jpg",
+        category: "cookie",
+        description: "酥脆的威化捲心餅乾，內餡香甜可口",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "溜溜球",
+        price: 45,
+        image: "images/yoyo.jpg",
+        category: "toy",
+        description: "經典的手持旋轉玩具，適合各年齡層",
+        sketchfabUrl: "https://sketchfab.com/"
     }
 ];
 
