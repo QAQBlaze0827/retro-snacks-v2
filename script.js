@@ -3,6 +3,7 @@
 // ==========================================
 // 後端 API 的網址集中在 config.js，避免不同頁面各自寫死。
 const API_URL = window.RETRO_SNACKS_CONFIG.API_URL;
+let currentCategory = "all";
 
 console.log("當前連線的 API 網址是:", API_URL);
 
@@ -44,12 +45,31 @@ setInterval(() => {
 // 3. 商品讀取與顯示 (動態從資料庫抓取)
 // ==========================================
 async function fetchProducts() {
+    const container = document.getElementById('productContainer');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="products-state">
+            <p>商品載入中，請稍候...</p>
+        </div>
+    `;
+
     try {
         const response = await fetch(`${API_URL}/products`);
+        if (!response.ok) throw new Error(`商品 API 回傳 ${response.status}`);
+
         const products = await response.json();
+        if (!Array.isArray(products)) throw new Error("商品資料格式錯誤");
+
         renderProducts(products); // 抓到資料後，把它畫在畫面上
     } catch (err) {
         console.error("抓取商品失敗:", err);
+        container.innerHTML = `
+            <div class="products-state products-state-error">
+                <p>商品載入失敗，可能是後端正在啟動或網路暫時不穩定。</p>
+                <button type="button" onclick="fetchProducts()">重新載入</button>
+            </div>
+        `;
     }
 }
 
@@ -74,6 +94,15 @@ function renderProducts(products) {
         `;
         container.appendChild(card);
     });
+
+    const emptyState = document.createElement('div');
+    emptyState.id = 'productEmptyState';
+    emptyState.className = 'products-state';
+    emptyState.hidden = true;
+    emptyState.innerHTML = '<p>沒有符合目前條件的商品。</p>';
+    container.appendChild(emptyState);
+
+    applyProductFilters();
 }
 
 // ==========================================
@@ -206,24 +235,80 @@ window.onclick = function(event) {
     }
 }
 
+document.addEventListener("keydown", function(event) {
+    if (event.key !== "Escape") return;
+
+    const dropdown = document.getElementById("myDropdown");
+    if (dropdown) dropdown.classList.remove("show");
+
+    const popup = document.getElementById("popup");
+    if (popup && popup.style.display === "block") closePopup();
+
+    const favoriteModal = document.getElementById("favoriteModal");
+    if (favoriteModal && favoriteModal.style.display === "block") closeFavorites();
+
+    closeModal();
+});
+
 function filterCategory(type) {
-    let cards = document.querySelectorAll(".card");
-    cards.forEach(card => {
-        if (type === "all" || card.classList.contains(type)) {
-            card.style.display = "block";
-        } else {
-            card.style.display = "none";
-        }
-    });
+    const categories = ["all", "candy", "cookie", "drink", "toy"];
+    currentCategory = categories.includes(type) ? type : "all";
+    applyProductFilters();
 }
 
 function searchProduct() {
-    let input = document.getElementById("searchInput").value.toLowerCase();
-    let cards = document.querySelectorAll(".card");
+    applyProductFilters();
+}
+
+function applyProductFilters() {
+    const categoryNames = {
+        all: "全部商品",
+        candy: "糖果",
+        cookie: "餅乾",
+        drink: "飲料",
+        toy: "玩具"
+    };
+    const input = document.getElementById("searchInput");
+    const keyword = input ? input.value.trim().toLowerCase() : "";
+    const cards = document.querySelectorAll(".card");
+    let visibleCount = 0;
+
     cards.forEach(card => {
-        let name = card.dataset.name ? card.dataset.name.toLowerCase() : "";
-        card.style.display = name.includes(input) ? "block" : "none";
+        const name = card.dataset.name ? card.dataset.name.toLowerCase() : "";
+        const matchesCategory = currentCategory === "all" || card.classList.contains(currentCategory);
+        const matchesKeyword = name.includes(keyword);
+        const isVisible = matchesCategory && matchesKeyword;
+
+        card.style.display = isVisible ? "" : "none";
+        if (isVisible) visibleCount++;
     });
+
+    const hasFilters = currentCategory !== "all" || keyword !== "";
+    const status = document.getElementById("productFilterStatus");
+    const statusText = document.getElementById("productFilterText");
+    if (status && statusText) {
+        status.hidden = !hasFilters;
+        if (hasFilters) {
+            const details = [`分類：${categoryNames[currentCategory]}`];
+            if (keyword) details.push(`搜尋「${input.value.trim()}」`);
+            statusText.innerText = `${details.join("，")}（${visibleCount} 項）`;
+        }
+    }
+
+    const emptyState = document.getElementById("productEmptyState");
+    if (emptyState) {
+        emptyState.hidden = visibleCount > 0;
+        emptyState.querySelector("p").innerText = cards.length === 0
+            ? "目前沒有商品。"
+            : "沒有符合目前條件的商品。";
+    }
+}
+
+function clearProductFilters() {
+    currentCategory = "all";
+    const input = document.getElementById("searchInput");
+    if (input) input.value = "";
+    applyProductFilters();
 }
 
 // ==========================================
@@ -300,8 +385,14 @@ function removeFavorite(i) {
 // ==========================================
 // 7. 會員登入註冊 (對接後端 API)
 // ==========================================
-function openLogin() { document.getElementById("loginModal").style.display = "block"; }
-function openRegister() { document.getElementById("registerModal").style.display = "block"; }
+function openLogin() {
+    document.getElementById("loginModal").style.display = "block";
+    document.getElementById("loginUser").focus();
+}
+function openRegister() {
+    document.getElementById("registerModal").style.display = "block";
+    document.getElementById("regUser").focus();
+}
 function closeModal() {
     document.getElementById("loginModal").style.display = "none";
     document.getElementById("registerModal").style.display = "none";
@@ -309,12 +400,30 @@ function closeModal() {
 function switchRegister() { closeModal(); openRegister(); }
 function switchLogin() { closeModal(); openLogin(); }
 
-async function register() {
+function setSubmitButtonState(button, isLoading, loadingText) {
+    if (!button) return;
+
+    if (isLoading) {
+        button.dataset.defaultText = button.innerText;
+        button.innerText = loadingText;
+        button.disabled = true;
+    } else {
+        button.innerText = button.dataset.defaultText || button.innerText;
+        button.disabled = false;
+    }
+}
+
+async function register(event) {
+    if (event) event.preventDefault();
     let user = document.getElementById("regUser").value.trim();
     let email = document.getElementById("regEmail").value.trim();
     let pass = document.getElementById("regPass").value.trim();
+    const submitButton = document.getElementById("registerSubmitBtn");
 
     if(!user || !email || !pass) { alert("請填寫所有欄位"); return; }
+    if (submitButton.disabled) return;
+
+    setSubmitButtonState(submitButton, true, "發送中...");
 
     try {
         const response = await fetch(`${API_URL}/register`, {
@@ -326,15 +435,28 @@ async function register() {
         if (data.success) {
             document.getElementById("regInitial").style.display = "none";
             document.getElementById("regVerify").style.display = "block";
+            document.getElementById("verifyCode").focus();
         } else {
             alert(data.message);
         }
-    } catch (err) { alert("伺服器連線失敗"); }
+    } catch (err) {
+        alert("伺服器連線失敗");
+    } finally {
+        setSubmitButtonState(submitButton, false);
+    }
 }
 
-async function verifyCode() {
+async function submitVerificationCode(event) {
+    if (event) event.preventDefault();
     let user = document.getElementById("regUser").value.trim();
     let code = document.getElementById("verifyCode").value.trim();
+    const submitButton = document.getElementById("verifySubmitBtn");
+
+    if (!code) { alert("請輸入驗證碼"); return; }
+    if (submitButton.disabled) return;
+
+    setSubmitButtonState(submitButton, true, "驗證中...");
+
     try {
         const response = await fetch(`${API_URL}/verify`, {
             method: 'POST',
@@ -346,12 +468,23 @@ async function verifyCode() {
             alert("驗證成功！請登入");
             location.reload();
         } else { alert(data.message); }
-    } catch (err) { alert("驗證失敗"); }
+    } catch (err) {
+        alert("驗證失敗");
+    } finally {
+        setSubmitButtonState(submitButton, false);
+    }
 }
 
-async function login() {
+async function login(event) {
+    if (event) event.preventDefault();
     let user = document.getElementById("loginUser").value.trim();
     let pass = document.getElementById("loginPass").value.trim();
+    const submitButton = document.getElementById("loginSubmitBtn");
+
+    if (!user || !pass) { alert("請輸入帳號和密碼"); return; }
+    if (submitButton.disabled) return;
+
+    setSubmitButtonState(submitButton, true, "登入中...");
 
     try {
         const response = await fetch(`${API_URL}/login`, {
@@ -367,7 +500,11 @@ async function login() {
             alert("登入成功！");
             location.reload(); // 重新整理來顯示頭像
         } else { alert("失敗：" + data.message); }
-    } catch (err) { alert("連線錯誤"); }
+    } catch (err) {
+        alert("連線錯誤");
+    } finally {
+        setSubmitButtonState(submitButton, false);
+    }
 }
 
 function isTokenExpired(token) {

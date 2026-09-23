@@ -22,7 +22,7 @@
 
         <img src="images/logo.jpg" class="logo">
 
-        <input id="searchInput" class="search" placeholder="搜尋零食..." onkeyup="searchProduct()">
+        <input id="searchInput" class="search" placeholder="搜尋零食..." oninput="searchProduct()">
 
         <button onclick="openLogin()" id="loginBtn">登入</button>
         <button onclick="openRegister()" id="regBtn">註冊</button>
@@ -40,9 +40,15 @@
     </div>
 
     <div class="products-section">
+        <div id="productFilterStatus" class="product-filter-status" hidden>
+            <span id="productFilterText"></span>
+            <button type="button" onclick="clearProductFilters()">清除條件</button>
+        </div>
         <!-- 商品卡片將在這裡動態生成 -->
          <div class="products" id="productContainer">
-            <p style="color: white; text-align: center; width: 100%;">商品載入中，請稍候...</p>
+            <div class="products-state">
+                <p>商品載入中，請稍候...</p>
+            </div>
         </div>
     </div>
 
@@ -99,9 +105,13 @@
     <div id="loginModal" class="modal">
         <div class="modal-box">
             <h2>會員登入</h2>
-            <input id="loginUser" type="text" placeholder="帳號">
-            <input id="loginPass" type="password" placeholder="密碼">
-            <button onclick="login()">登入</button>
+            <form id="loginForm" onsubmit="login(event)">
+                <label class="sr-only" for="loginUser">帳號</label>
+                <input id="loginUser" type="text" placeholder="帳號" autocomplete="username">
+                <label class="sr-only" for="loginPass">密碼</label>
+                <input id="loginPass" type="password" placeholder="密碼" autocomplete="current-password">
+                <button id="loginSubmitBtn" type="submit">登入</button>
+            </form>
             <p onclick="switchRegister()">沒有帳號？註冊</p> <span class="close" onclick="closeModal()">✕</span>
         </div>
     </div>
@@ -109,17 +119,22 @@
     <div id="registerModal" class="modal">
         <div class="modal-box">
             <h2>會員註冊</h2>
-            <div id="regInitial"> <input id="regUser" type="text" placeholder="帳號">
-                <input id="regEmail" type="email" placeholder="Email">
-                <input id="regPass" type="password" placeholder="密碼">
-                <button onclick="register()">發送驗證碼</button>
-            </div>
+            <form id="regInitial" onsubmit="register(event)">
+                <label class="sr-only" for="regUser">帳號</label>
+                <input id="regUser" type="text" placeholder="帳號" autocomplete="username">
+                <label class="sr-only" for="regEmail">Email</label>
+                <input id="regEmail" type="email" placeholder="Email" autocomplete="email">
+                <label class="sr-only" for="regPass">密碼</label>
+                <input id="regPass" type="password" placeholder="密碼" autocomplete="new-password">
+                <button id="registerSubmitBtn" type="submit">發送驗證碼</button>
+            </form>
             
-            <div id="regVerify" style="display: none;"> <p>驗證碼已寄到您的信箱</p>
+            <form id="regVerify" onsubmit="submitVerificationCode(event)" style="display: none;"> <p>驗證碼已寄到您的信箱</p>
                 <p style="font-size: 14px; color: #5b2c1a;">若沒收到驗證信，請到垃圾郵件查找。</p>
-                <input id="verifyCode" type="text" placeholder="請輸入 6 位驗證碼">
-                <button onclick="verifyCode()">確認驗證</button>
-            </div>
+                <label class="sr-only" for="verifyCode">六位數驗證碼</label>
+                <input id="verifyCode" type="text" inputmode="numeric" maxlength="6" placeholder="請輸入 6 位驗證碼" autocomplete="one-time-code">
+                <button id="verifySubmitBtn" type="submit">確認驗證</button>
+            </form>
             <p onclick="switchLogin()">已有帳號？登入</p>
             <span class="close" onclick="closeModal()">✕</span>
         </div>
