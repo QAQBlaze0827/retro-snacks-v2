@@ -56,14 +56,6 @@ const dbUrl = process.env.MONGODB_URI || 'mongodb://db:27017/retro_shop';
 // 初始商品清單
 const initialProducts = [
     { 
-        name: "彈珠汽水", 
-        price: 30, 
-        image: "images/ramune_1.jpg", 
-        category: "drink", 
-        description: "復古玻璃瓶裝，內含彈珠的經典汽水",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" // 沒有口味的，直接放最外層
-    },
-    { 
         name: "果粒多", 
         price: 25, 
         image: "images/guoliduo_1.jpg", 
