@@ -61,7 +61,7 @@ const initialProducts = [
         image: "images/guoliduo_1.jpg", 
         category: "drink", 
         description: "滿滿果粒的清爽果汁",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
+        sketchfabUrl: "https://sketchfab.com/3d-models/14708b222b1a4f04a89b689035af8f83"
     },
     { 
         name: "牛奶糖", 
@@ -136,7 +136,7 @@ const initialProducts = [
         image: "images/robot_1.jpg",
         category: "toy",
         description: "經典造型的復古玩具機器人",
-        sketchfabUrl: "https://sketchfab.com/"
+        sketchfabUrl: "https://sketchfab.com/3d-models/add0ea5449ed4424aa4b9dc38e2b7c34"
     },
     {
         name: "陀螺",
@@ -208,7 +208,7 @@ const initialProducts = [
         image: "images/plum_cake.jpg",
         category: "candy",
         description: "酸甜開胃的古早味梅子餅",
-        sketchfabUrl: "https://sketchfab.com/"
+        sketchfabUrl: "https://sketchfab.com/3d-models/4287a8b1267846ffb21ced0fd2b80b06"
     }
 ];
 
