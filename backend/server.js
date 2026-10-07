@@ -177,6 +177,38 @@ const initialProducts = [
         category: "toy",
         description: "經典的手持旋轉玩具，適合各年齡層",
         sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "劍玉",
+        price: 60,
+        image: "images/kendama.jpg",
+        category: "toy",
+        description: "考驗手眼協調與平衡感的經典童玩",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "古早味口香糖",
+        price: 10,
+        image: "images/old_chewing_gum.jpg",
+        category: "candy",
+        description: "酸甜果香的經典懷舊口香糖",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "Pinky 薄荷糖",
+        price: 15,
+        image: "images/pinky.jpg",
+        category: "candy",
+        description: "清涼爽口的小顆粒薄荷糖",
+        sketchfabUrl: "https://sketchfab.com/"
+    },
+    {
+        name: "梅餅",
+        price: 15,
+        image: "images/plum_cake.jpg",
+        category: "candy",
+        description: "酸甜開胃的古早味梅子餅",
+        sketchfabUrl: "https://sketchfab.com/"
     }
 ];
 
