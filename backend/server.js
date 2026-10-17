@@ -80,14 +80,6 @@ const initialProducts = [
         sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
     },
     { 
-        name: "養樂多", 
-        price: 10, 
-        image: "images/yakult_1.jpg", 
-        category: "drink", 
-        description: "陪伴大家長大的發酵乳",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
-    },
-    { 
         name: "飛壘口香糖", 
         price: 10, 
         image: "images/feilei_1.jpg", 
@@ -147,14 +139,6 @@ const initialProducts = [
         sketchfabUrl: "https://sketchfab.com/"
     },
     {
-        name: "魯班鎖",
-        price: 100,
-        image: "images/Lubanlock.jpg",
-        category: "toy",
-        description: "童年常見的經典益智玩具",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
         name: "健達出奇蛋",
         price: 40,
         image: "images/Kinder_Surprise.jpg",
@@ -171,14 +155,6 @@ const initialProducts = [
         sketchfabUrl: "https://sketchfab.com/"
     },
     {
-        name: "溜溜球",
-        price: 45,
-        image: "images/yoyo.jpg",
-        category: "toy",
-        description: "經典的手持旋轉玩具，適合各年齡層",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
         name: "劍玉",
         price: 60,
         image: "images/kendama.jpg",
@@ -187,7 +163,7 @@ const initialProducts = [
         sketchfabUrl: "https://sketchfab.com/"
     },
     {
-        name: "古早味口香糖",
+        name: "水果口香糖",
         price: 10,
         image: "images/old_chewing_gum.jpg",
         category: "candy",
