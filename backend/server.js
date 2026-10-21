@@ -1,47 +1,52 @@
-require('dns').setDefaultResultOrder('ipv4first');
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-require('dotenv').config();
+require("dns").setDefaultResultOrder("ipv4first");
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+require("dotenv").config();
 
 // 引入 SendGrid Web API，不使用 SMTP，避免 Render 免費方案封鎖 SMTP port。
-const sgMail = require('@sendgrid/mail');
+const sgMail = require("@sendgrid/mail");
 
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_jwt_secret_change_me';
+const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL;
-const SENDGRID_FROM_NAME = process.env.SENDGRID_FROM_NAME || 'Retro Snacks Shop';
+const SENDGRID_FROM_NAME =
+  process.env.SENDGRID_FROM_NAME || "Retro Snacks Shop";
 
 if (SENDGRID_API_KEY) {
-    sgMail.setApiKey(SENDGRID_API_KEY);
+  sgMail.setApiKey(SENDGRID_API_KEY);
 }
 
 if (!process.env.JWT_SECRET) {
-    console.warn('⚠️ JWT_SECRET 未設定，目前使用開發用預設值。正式部署請在 Render 設定 JWT_SECRET。');
+  console.warn(
+    "⚠️ JWT_SECRET 未設定，目前使用開發用預設值。正式部署請在 Render 設定 JWT_SECRET。",
+  );
 }
 
 if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
-    console.warn('⚠️ SendGrid 尚未完整設定，請在 Render 設定 SENDGRID_API_KEY 與 SENDGRID_FROM_EMAIL。');
+  console.warn(
+    "⚠️ SendGrid 尚未完整設定，請在 Render 設定 SENDGRID_API_KEY 與 SENDGRID_FROM_EMAIL。",
+  );
 }
 
 async function sendVerificationEmail(email, username, code) {
-    if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
-        throw new Error('SendGrid environment variables are missing');
-    }
+  if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
+    throw new Error("SendGrid environment variables are missing");
+  }
 
-    await sgMail.send({
-        to: email,
-        from: {
-            email: SENDGRID_FROM_EMAIL,
-            name: SENDGRID_FROM_NAME
-        },
-        subject: '您的註冊驗證碼',
-        text: `哈囉 ${username}！您的驗證碼是：${code}。驗證碼 5 分鐘內有效。`,
-        html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1><p>驗證碼 5 分鐘內有效。</p>`
-    });
+  await sgMail.send({
+    to: email,
+    from: {
+      email: SENDGRID_FROM_EMAIL,
+      name: SENDGRID_FROM_NAME,
+    },
+    subject: "您的註冊驗證碼",
+    text: `哈囉 ${username}！您的驗證碼是：${code}。驗證碼 5 分鐘內有效。`,
+    html: `<strong>哈囉 ${username}！</strong><br>您的驗證碼是：<h1>${code}</h1><p>驗證碼 5 分鐘內有效。</p>`,
+  });
 }
 
 // Middleware
@@ -51,213 +56,263 @@ app.use(cors());
 // ==========================================
 // 1. 資料庫連線與自動匯入商品
 // ==========================================
-const dbUrl = process.env.MONGODB_URI || 'mongodb://db:27017/retro_shop';
+const dbUrl = process.env.MONGODB_URI || "mongodb://db:27017/retro_shop";
 
 // 初始商品清單
 const initialProducts = [
-    { 
-        name: "果粒多", 
-        price: 25, 
-        image: "images/guoliduo_1.jpg", 
-        category: "drink", 
-        description: "滿滿果粒的清爽果汁",
-        sketchfabUrl: "https://sketchfab.com/3d-models/14708b222b1a4f04a89b689035af8f83"
-    },
-    { 
-        name: "牛奶糖", 
-        price: 15, 
-        image: "images/milk_candy_1.jpg", 
-        category: "candy", 
-        description: "濃郁奶香，入口即化的甜蜜滋味",
-        sketchfabUrl: "https://sketchfab.com/3d-models/5df91043388c4a2dbb4201e08a9a6a99"
-    },
-    { 
-        name: "布丁", 
-        price: 20, 
-        image: "images/pudding_1.jpg", 
-        category: "candy", 
-        description: "古早味雞蛋布丁",
-        sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6"
-    },
-    { 
-        name: "飛壘口香糖", 
-        price: 10, 
-        image: "images/feilei_1.jpg", 
-        category: "candy", 
-        description: "可以吹出超大泡泡的經典口香糖",
-        // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
-        options: [
-            { flavor: "草莓", sketchfabUrl: "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44" },
-            { flavor: "橘子", sketchfabUrl: "https://sketchfab.com/3d-models/e30b75dca21d4abfb47c8b0c9751dab1" },
-            { flavor: "藍莓", sketchfabUrl: "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6" },
-            { flavor: "荔枝", sketchfabUrl: "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99" }
-        ]
-    },
-    { 
-        name: "可口可樂糖", 
-        price: 10, 
-        image: "images/coke_1.jpg", 
-        category: "candy", 
-        description: "可樂形狀的硬糖，香甜可口",
-        sketchfabUrl: "https://sketchfab.com/3d-models/387be1a9b7eb460c85619d7343e14fac"
-    },
-    { 
-        name: "CC樂", 
-        price: 12, 
-        image: "images/cc_1.jpg", 
-        category: "candy", 
-        description: "管狀彩色糖果，小朋友的最愛",
-        sketchfabUrl: "https://sketchfab.com/3d-models/cc-0d7e0d9d47634765a5bc464d5d07947f"
-    },
-    { 
-        name: "麥香系列", 
-        price: 15, 
-        image: "images/maixiang_1.jpg", 
-        category: "drink", 
-        description: "熟悉的麥香最對味",
-        // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
-        options: [
-            { flavor: "紅茶", sketchfabUrl: "https://sketchfab.com/3d-models/c25a395ac0ae4a89ab1f7bc11385f509" },
-            { flavor: "綠茶", sketchfabUrl: "https://sketchfab.com/3d-models/0ebaead5934542559a4551928a96e7a0" },
-            { flavor: "奶茶", sketchfabUrl: "https://sketchfab.com/3d-models/c7e4f6e4b1204b2eb6932be688ca87c6" }
-        ]
-    },
-    {
-        name: "復古機器人",
-        price: 50,
-        image: "images/robot_1.jpg",
-        category: "toy",
-        description: "經典造型的復古玩具機器人",
-        sketchfabUrl: "https://sketchfab.com/3d-models/add0ea5449ed4424aa4b9dc38e2b7c34"
-    },
-    {
-        name: "陀螺",
-        price: 20,
-        image: "images/top_1.jpg",
-        category: "toy",
-        description: "童年常見的經典旋轉玩具",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "健達出奇蛋",
-        price: 40,
-        image: "images/Kinder_Surprise.jpg",
-        category: "candy",
-        description: "巧克力外殼內含驚喜玩具的經典糖果",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "小瓜呆脆笛酥",
-        price: 50,
-        image: "images/Wafer_Rolls.jpg",
-        category: "cookie",
-        description: "酥脆的威化捲心餅乾，內餡香甜可口",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "劍玉",
-        price: 60,
-        image: "images/kendama.jpg",
-        category: "toy",
-        description: "考驗手眼協調與平衡感的經典童玩",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "水果口香糖",
-        price: 10,
-        image: "images/old_chewing_gum.jpg",
-        category: "candy",
-        description: "酸甜果香的經典懷舊口香糖",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "Pinky 薄荷糖",
-        price: 15,
-        image: "images/pinky.jpg",
-        category: "candy",
-        description: "清涼爽口的小顆粒薄荷糖",
-        sketchfabUrl: "https://sketchfab.com/"
-    },
-    {
-        name: "梅餅",
-        price: 15,
-        image: "images/plum_cake.jpg",
-        category: "candy",
-        description: "酸甜開胃的古早味梅子餅",
-        sketchfabUrl: "https://sketchfab.com/3d-models/4287a8b1267846ffb21ced0fd2b80b06"
-    }
+  {
+    name: "果粒多",
+    price: 25,
+    image: "images/guoliduo_1.jpg",
+    category: "drink",
+    description: "滿滿果粒的清爽果汁",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/14708b222b1a4f04a89b689035af8f83",
+  },
+  {
+    name: "牛奶糖",
+    price: 15,
+    image: "images/milk_candy_1.jpg",
+    category: "candy",
+    description: "濃郁奶香，入口即化的甜蜜滋味",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/5df91043388c4a2dbb4201e08a9a6a99",
+  },
+  {
+    name: "布丁",
+    price: 20,
+    image: "images/pudding_1.jpg",
+    category: "candy",
+    description: "古早味雞蛋布丁",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6",
+  },
+  {
+    name: "飛壘口香糖",
+    price: 10,
+    image: "images/feilei_1.jpg",
+    category: "candy",
+    description: "可以吹出超大泡泡的經典口香糖",
+    // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
+    options: [
+      {
+        flavor: "草莓",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44",
+      },
+      {
+        flavor: "橘子",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/e30b75dca21d4abfb47c8b0c9751dab1",
+      },
+      {
+        flavor: "藍莓",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6",
+      },
+      {
+        flavor: "荔枝",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99",
+      },
+    ],
+  },
+  {
+    name: "可口可樂糖",
+    price: 10,
+    image: "images/coke_1.jpg",
+    category: "candy",
+    description: "可樂形狀的硬糖，香甜可口",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/387be1a9b7eb460c85619d7343e14fac",
+  },
+  {
+    name: "CC樂",
+    price: 12,
+    image: "images/cc_1.jpg",
+    category: "candy",
+    description: "管狀彩色糖果，小朋友的最愛",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/cc-0d7e0d9d47634765a5bc464d5d07947f",
+  },
+  {
+    name: "麥香系列",
+    price: 15,
+    image: "images/maixiang_1.jpg",
+    category: "drink",
+    description: "熟悉的麥香最對味",
+    // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
+    options: [
+      {
+        flavor: "紅茶",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/c25a395ac0ae4a89ab1f7bc11385f509",
+      },
+      {
+        flavor: "綠茶",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/0ebaead5934542559a4551928a96e7a0",
+      },
+      {
+        flavor: "奶茶",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/c7e4f6e4b1204b2eb6932be688ca87c6",
+      },
+    ],
+  },
+  {
+    name: "復古機器人",
+    price: 50,
+    image: "images/robot_1.jpg",
+    category: "toy",
+    description: "經典造型的復古玩具機器人",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/add0ea5449ed4424aa4b9dc38e2b7c34",
+  },
+  {
+    name: "陀螺",
+    price: 20,
+    image: "images/top_1.jpg",
+    category: "toy",
+    description: "童年常見的經典旋轉玩具",
+    sketchfabUrl: "https://sketchfab.com/",
+  },
+  {
+    name: "健達出奇蛋",
+    price: 40,
+    image: "images/Kinder_Surprise.jpg",
+    category: "candy",
+    description: "巧克力外殼內含驚喜玩具的經典糖果",
+    sketchfabUrl: "https://sketchfab.com/",
+  },
+  {
+    name: "小瓜呆脆笛酥",
+    price: 50,
+    image: "images/Wafer_Rolls.jpg",
+    category: "cookie",
+    description: "酥脆的威化捲心餅乾，內餡香甜可口",
+    sketchfabUrl: "https://sketchfab.com/",
+  },
+  {
+    name: "劍玉",
+    price: 60,
+    image: "images/kendama.jpg",
+    category: "toy",
+    description: "考驗手眼協調與平衡感的經典童玩",
+    sketchfabUrl: "https://sketchfab.com/",
+  },
+  {
+    name: "水果口香糖",
+    price: 10,
+    image: "images/old_chewing_gum.jpg",
+    category: "candy",
+    description: "酸甜果香的經典懷舊口香糖",
+    sketchfabUrl: "https://sketchfab.com/",
+  },
+  {
+    name: "Pinky 薄荷糖",
+    price: 15,
+    image: "images/pinky.jpg",
+    category: "candy",
+    description: "清涼爽口的小顆粒薄荷糖",
+    sketchfabUrl: "https://sketchfab.com/3d-models/pinky-50204d9dd4004f57b9cdc5ddec48ef7a",
+  },
+  {
+    name: "梅餅",
+    price: 15,
+    image: "images/plum_cake.jpg",
+    category: "candy",
+    description: "酸甜開胃的古早味梅子餅",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/4287a8b1267846ffb21ced0fd2b80b06",
+  },
+  {
+    name: "多拉A夢糖",
+    price: 20,
+    image: "images/doraemon.jpg",
+    category: "candy",
+    description: "以經典卡通角色多拉A夢為造型的糖果",
+    sketchfabUrl:
+      "https://sketchfab.com/3d-models/a81f81c6a3864ad59b3a8f86b1b53058",
+  },
 ];
 
 const initialHolePrizes = [
-    { name: "5 元折價券", isWinner: true, weight: 35 },
-    { name: "10 元折價券", isWinner: true, weight: 20 },
-    { name: "神秘小禮", isWinner: true, weight: 10 },
-    { name: "再接再厲", isWinner: false, weight: 35 }
+  { name: "5 元折價券", isWinner: true, weight: 35 },
+  { name: "10 元折價券", isWinner: true, weight: 20 },
+  { name: "神秘小禮", isWinner: true, weight: 10 },
+  { name: "再接再厲", isWinner: false, weight: 35 },
 ];
 
 function getTaipeiDateString(date = new Date()) {
-    const parts = new Intl.DateTimeFormat('en-CA', {
-        timeZone: 'Asia/Taipei',
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-    }).formatToParts(date);
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Taipei",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(date);
 
-    const values = Object.fromEntries(parts.map(part => [part.type, part.value]));
-    return `${values.year}-${values.month}-${values.day}`;
+  const values = Object.fromEntries(
+    parts.map((part) => [part.type, part.value]),
+  );
+  return `${values.year}-${values.month}-${values.day}`;
 }
 
 function publicRewardRecord(record) {
-    if (!record) return null;
-    return {
-        prizeName: record.prizeName,
-        isWinner: record.isWinner,
-        playDate: record.playDate,
-        createdAt: record.createdAt
-    };
+  if (!record) return null;
+  return {
+    prizeName: record.prizeName,
+    isWinner: record.isWinner,
+    playDate: record.playDate,
+    createdAt: record.createdAt,
+  };
 }
 
 function pickPrize(prizes) {
-    const totalWeight = prizes.reduce((sum, prize) => sum + Math.max(prize.weight || 0, 0), 0);
-    if (totalWeight <= 0) return prizes[0];
+  const totalWeight = prizes.reduce(
+    (sum, prize) => sum + Math.max(prize.weight || 0, 0),
+    0,
+  );
+  if (totalWeight <= 0) return prizes[0];
 
-    let target = Math.random() * totalWeight;
-    for (const prize of prizes) {
-        target -= Math.max(prize.weight || 0, 0);
-        if (target <= 0) return prize;
-    }
+  let target = Math.random() * totalWeight;
+  for (const prize of prizes) {
+    target -= Math.max(prize.weight || 0, 0);
+    if (target <= 0) return prize;
+  }
 
-    return prizes[prizes.length - 1];
+  return prizes[prizes.length - 1];
 }
 
-mongoose.connect(dbUrl)
-    .then(async () => {
-        console.log('✅ MongoDB Connected');
-        
-        // 依商品名稱同步初始商品，讓新圖片、3D 連結與新增商品能更新到雲端資料庫。
-        await Product.bulkWrite(
-            initialProducts.map(product => ({
-                updateOne: {
-                    filter: { name: product.name },
-                    update: { $set: product },
-                    upsert: true
-                }
-            }))
-        );
-        console.log('✅ 商品資料同步成功！');
+mongoose
+  .connect(dbUrl)
+  .then(async () => {
+    console.log("✅ MongoDB Connected");
 
-        await HolePrize.bulkWrite(
-            initialHolePrizes.map(prize => ({
-                updateOne: {
-                    filter: { name: prize.name },
-                    update: { $set: prize },
-                    upsert: true
-                }
-            }))
-        );
-        console.log('✅ 洞洞樂獎品資料同步成功！');
-    })
-    .catch(err => console.error('❌ MongoDB Connection Error:', err));
+    // 依商品名稱同步初始商品，讓新圖片、3D 連結與新增商品能更新到雲端資料庫。
+    await Product.bulkWrite(
+      initialProducts.map((product) => ({
+        updateOne: {
+          filter: { name: product.name },
+          update: { $set: product },
+          upsert: true,
+        },
+      })),
+    );
+    console.log("✅ 商品資料同步成功！");
+
+    await HolePrize.bulkWrite(
+      initialHolePrizes.map((prize) => ({
+        updateOne: {
+          filter: { name: prize.name },
+          update: { $set: prize },
+          upsert: true,
+        },
+      })),
+    );
+    console.log("✅ 洞洞樂獎品資料同步成功！");
+  })
+  .catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
 // ==========================================
 // 2. 定義資料模型 (Schemas)
@@ -265,87 +320,88 @@ mongoose.connect(dbUrl)
 
 // 使用者模型
 const userSchema = new mongoose.Schema({
-    username: { type: String, required: true, unique: true, trim: true },
-    password: { type: String, required: true },
-    email: { type: String, required: true },
-    birthday: { type: String, default: "" },
-    phone: { type: String, default: "" },
-    preference: { type: String, default: "" },
-    isVerified: { type: Boolean, default: false },
-    verificationCode: String,
-    codeExpires: Date
+  username: { type: String, required: true, unique: true, trim: true },
+  password: { type: String, required: true },
+  email: { type: String, required: true },
+  birthday: { type: String, default: "" },
+  phone: { type: String, default: "" },
+  preference: { type: String, default: "" },
+  isVerified: { type: Boolean, default: false },
+  verificationCode: String,
+  codeExpires: Date,
 });
-const User = mongoose.model('User', userSchema);
+const User = mongoose.model("User", userSchema);
 
 // 商品模型
 const productSchema = new mongoose.Schema({
-    name: { type: String, required: true },
-    price: { type: Number, required: true },
-    image: { type: String, required: true },
-    category: { type: String, required: true },
-    description: { type: String },
-    sketchfabUrl: { type: String }, // 新增這行：單一商品的 3D 連結
-    options: [
-        {
-            flavor: String,        // 口味名稱 (例如：草莓)
-            sketchfabUrl: String   // 該口味專屬的 3D 連結
-        }
-    ]
+  name: { type: String, required: true },
+  price: { type: Number, required: true },
+  image: { type: String, required: true },
+  category: { type: String, required: true },
+  description: { type: String },
+  sketchfabUrl: { type: String }, // 新增這行：單一商品的 3D 連結
+  options: [
+    {
+      flavor: String, // 口味名稱 (例如：草莓)
+      sketchfabUrl: String, // 該口味專屬的 3D 連結
+    },
+  ],
 });
-const Product = mongoose.model('Product', productSchema);
+const Product = mongoose.model("Product", productSchema);
 
 const holePrizeSchema = new mongoose.Schema({
-    name: { type: String, required: true, unique: true },
-    isWinner: { type: Boolean, default: true },
-    weight: { type: Number, default: 1 }
+  name: { type: String, required: true, unique: true },
+  isWinner: { type: Boolean, default: true },
+  weight: { type: Number, default: 1 },
 });
-const HolePrize = mongoose.model('HolePrize', holePrizeSchema);
+const HolePrize = mongoose.model("HolePrize", holePrizeSchema);
 
 const rewardRecordSchema = new mongoose.Schema({
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-    username: { type: String, required: true },
-    prizeName: { type: String, required: true },
-    isWinner: { type: Boolean, default: true },
-    playDate: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now }
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  username: { type: String, required: true },
+  prizeName: { type: String, required: true },
+  isWinner: { type: Boolean, default: true },
+  playDate: { type: String, required: true },
+  createdAt: { type: Date, default: Date.now },
 });
 rewardRecordSchema.index({ userId: 1, playDate: 1 }, { unique: true });
-const RewardRecord = mongoose.model('RewardRecord', rewardRecordSchema);
+const RewardRecord = mongoose.model("RewardRecord", rewardRecordSchema);
 
 function createToken(user) {
-    return jwt.sign(
-        { id: user._id.toString(), username: user.username },
-        JWT_SECRET,
-        { expiresIn: '7d' }
-    );
+  return jwt.sign(
+    { id: user._id.toString(), username: user.username },
+    JWT_SECRET,
+    { expiresIn: "7d" },
+  );
 }
 
 function publicUserData(user) {
-    return {
-        username: user.username,
-        email: user.email,
-        birthday: user.birthday,
-        phone: user.phone,
-        preference: user.preference
-    };
+  return {
+    username: user.username,
+    email: user.email,
+    birthday: user.birthday,
+    phone: user.phone,
+    preference: user.preference,
+  };
 }
 
 function authenticateToken(req, res, next) {
-    const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.startsWith('Bearer ')
-        ? authHeader.slice(7)
-        : null;
+  const authHeader = req.headers.authorization;
+  const token =
+    authHeader && authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
-    if (!token) {
-        return res.status(401).json({ success: false, message: '請先登入' });
-    }
+  if (!token) {
+    return res.status(401).json({ success: false, message: "請先登入" });
+  }
 
-    try {
-        req.user = jwt.verify(token, JWT_SECRET);
-        next();
-    } catch (err) {
-        return res.status(401).json({ success: false, message: '登入已過期，請重新登入' });
-    }
+  try {
+    req.user = jwt.verify(token, JWT_SECRET);
+    next();
+  } catch (err) {
+    return res
+      .status(401)
+      .json({ success: false, message: "登入已過期，請重新登入" });
+  }
 }
 
 // ==========================================
@@ -355,245 +411,271 @@ function authenticateToken(req, res, next) {
 // --- 商品相關 API ---
 
 // [GET] 取得所有商品
-app.get('/api/products', async (req, res) => {
-    try {
-        const products = await Product.find();
-        res.json(products);
-    } catch (err) {
-        res.status(500).json({ success: false, message: "抓取商品失敗" });
-    }
+app.get("/api/products", async (req, res) => {
+  try {
+    const products = await Product.find();
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ success: false, message: "抓取商品失敗" });
+  }
 });
 
 // --- 洞洞樂活動 API ---
 
-app.get('/api/hole-game/status', authenticateToken, async (req, res) => {
-    try {
-        const playDate = getTaipeiDateString();
-        const record = await RewardRecord.findOne({ userId: req.user.id, playDate });
+app.get("/api/hole-game/status", authenticateToken, async (req, res) => {
+  try {
+    const playDate = getTaipeiDateString();
+    const record = await RewardRecord.findOne({
+      userId: req.user.id,
+      playDate,
+    });
 
-        res.json({
-            success: true,
-            played: Boolean(record),
-            record: publicRewardRecord(record)
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: '讀取洞洞樂狀態失敗' });
-    }
+    res.json({
+      success: true,
+      played: Boolean(record),
+      record: publicRewardRecord(record),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "讀取洞洞樂狀態失敗" });
+  }
 });
 
-app.get('/api/hole-game/records', authenticateToken, async (req, res) => {
-    try {
-        const records = await RewardRecord.find({ userId: req.user.id })
-            .sort({ createdAt: -1 })
-            .limit(30);
+app.get("/api/hole-game/records", authenticateToken, async (req, res) => {
+  try {
+    const records = await RewardRecord.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(30);
 
-        res.json({
-            success: true,
-            records: records.map(publicRewardRecord)
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: '讀取中獎紀錄失敗' });
-    }
+    res.json({
+      success: true,
+      records: records.map(publicRewardRecord),
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "讀取中獎紀錄失敗" });
+  }
 });
 
-app.post('/api/hole-game/play', authenticateToken, async (req, res) => {
-    try {
-        const playDate = getTaipeiDateString();
-        const existingRecord = await RewardRecord.findOne({ userId: req.user.id, playDate });
-        if (existingRecord) {
-            return res.status(400).json({
-                success: false,
-                played: true,
-                message: '今天已經玩過洞洞樂了',
-                record: publicRewardRecord(existingRecord)
-            });
-        }
-
-        const prizes = await HolePrize.find().lean();
-        if (prizes.length === 0) {
-            return res.status(500).json({ success: false, message: '洞洞樂獎品尚未設定' });
-        }
-
-        const prize = pickPrize(prizes);
-        const record = await RewardRecord.create({
-            userId: req.user.id,
-            username: req.user.username,
-            prizeName: prize.name,
-            isWinner: prize.isWinner,
-            playDate
-        });
-
-        res.status(201).json({
-            success: true,
-            played: true,
-            message: '洞洞樂抽獎完成',
-            record: publicRewardRecord(record)
-        });
-    } catch (err) {
-        if (err.code === 11000) {
-            const playDate = getTaipeiDateString();
-            const record = await RewardRecord.findOne({ userId: req.user.id, playDate });
-            return res.status(400).json({
-                success: false,
-                played: true,
-                message: '今天已經玩過洞洞樂了',
-                record: publicRewardRecord(record)
-            });
-        }
-
-        console.error(err);
-        res.status(500).json({ success: false, message: '洞洞樂抽獎失敗' });
+app.post("/api/hole-game/play", authenticateToken, async (req, res) => {
+  try {
+    const playDate = getTaipeiDateString();
+    const existingRecord = await RewardRecord.findOne({
+      userId: req.user.id,
+      playDate,
+    });
+    if (existingRecord) {
+      return res.status(400).json({
+        success: false,
+        played: true,
+        message: "今天已經玩過洞洞樂了",
+        record: publicRewardRecord(existingRecord),
+      });
     }
+
+    const prizes = await HolePrize.find().lean();
+    if (prizes.length === 0) {
+      return res
+        .status(500)
+        .json({ success: false, message: "洞洞樂獎品尚未設定" });
+    }
+
+    const prize = pickPrize(prizes);
+    const record = await RewardRecord.create({
+      userId: req.user.id,
+      username: req.user.username,
+      prizeName: prize.name,
+      isWinner: prize.isWinner,
+      playDate,
+    });
+
+    res.status(201).json({
+      success: true,
+      played: true,
+      message: "洞洞樂抽獎完成",
+      record: publicRewardRecord(record),
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      const playDate = getTaipeiDateString();
+      const record = await RewardRecord.findOne({
+        userId: req.user.id,
+        playDate,
+      });
+      return res.status(400).json({
+        success: false,
+        played: true,
+        message: "今天已經玩過洞洞樂了",
+        record: publicRewardRecord(record),
+      });
+    }
+
+    console.error(err);
+    res.status(500).json({ success: false, message: "洞洞樂抽獎失敗" });
+  }
 });
 
 // --- 會員相關 API ---
 
 // [POST] 會員註冊
-app.post('/api/register', async (req, res) => {
-    try {
-        const { username, password, email } = req.body;
-        
-        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
-        if (existingUser) {
-            return res.status(400).json({ success: false, message: '帳號或 Email 已存在' });
-        }
+app.post("/api/register", async (req, res) => {
+  try {
+    const { username, password, email } = req.body;
 
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const newUser = new User({
-            username,
-            password: hashedPassword,
-            email,
-            verificationCode: code,
-            codeExpires: Date.now() + 300000
-        });
-
-        await newUser.save();
-
-        // 使用 SendGrid Web API 寄信
-        try {
-            await sendVerificationEmail(email, username, code);
-            console.log(`🚀 驗證碼已寄至: ${email}`);
-        } catch (mailErr) {
-            console.error("❌ SendGrid 寄信失敗:", mailErr.message);
-        }
-
-        return res.status(201).json({ success: true });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, message: "帳號或 Email 已存在" });
     }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const newUser = new User({
+      username,
+      password: hashedPassword,
+      email,
+      verificationCode: code,
+      codeExpires: Date.now() + 300000,
+    });
+
+    await newUser.save();
+
+    // 使用 SendGrid Web API 寄信
+    try {
+      await sendVerificationEmail(email, username, code);
+      console.log(`🚀 驗證碼已寄至: ${email}`);
+    } catch (mailErr) {
+      console.error("❌ SendGrid 寄信失敗:", mailErr.message);
+    }
+
+    return res.status(201).json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
 });
 
 // [POST] 驗證驗證碼
-app.post('/api/verify', async (req, res) => {
-    try {
-        const { username, code } = req.body;
+app.post("/api/verify", async (req, res) => {
+  try {
+    const { username, code } = req.body;
 
-        // 萬用碼邏輯
-        if (code === '000000') {
-            const user = await User.findOne({ username });
-            if (user) {
-                user.isVerified = true;
-                user.verificationCode = undefined;
-                user.codeExpires = undefined;
-                await user.save();
-                return res.json({ success: true, message: '測試驗證成功！' });
-            }
-        }
-        
-        const user = await User.findOne({ username, verificationCode: code });
-        if (!user || user.codeExpires < Date.now()) {
-            return res.status(400).json({ success: false, message: '驗證碼錯誤或已過期' });
-        }
-
+    // 萬用碼邏輯
+    if (code === "000000") {
+      const user = await User.findOne({ username });
+      if (user) {
         user.isVerified = true;
         user.verificationCode = undefined;
         user.codeExpires = undefined;
         await user.save();
-
-        res.json({ success: true, message: '驗證成功！' });
-    } catch (err) {
-        res.status(500).json({ success: false, message: '驗證失敗' });
+        return res.json({ success: true, message: "測試驗證成功！" });
+      }
     }
+
+    const user = await User.findOne({ username, verificationCode: code });
+    if (!user || user.codeExpires < Date.now()) {
+      return res
+        .status(400)
+        .json({ success: false, message: "驗證碼錯誤或已過期" });
+    }
+
+    user.isVerified = true;
+    user.verificationCode = undefined;
+    user.codeExpires = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "驗證成功！" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "驗證失敗" });
+  }
 });
 
 // [POST] 會員登入
-app.post('/api/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        const user = await User.findOne({ username });
+app.post("/api/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+    const user = await User.findOne({ username });
 
-        if (!user || !(await bcrypt.compare(password, user.password))) {
-            return res.status(400).json({ success: false, message: '帳號或密碼錯誤' });
-        }
-
-        if (!user.isVerified) {
-            return res.status(400).json({ success: false, message: '帳號尚未驗證' });
-        }
-
-        const token = createToken(user);
-        res.json({
-            success: true,
-            message: '登入成功',
-            token,
-            user: { username: user.username }
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res
+        .status(400)
+        .json({ success: false, message: "帳號或密碼錯誤" });
     }
+
+    if (!user.isVerified) {
+      return res.status(400).json({ success: false, message: "帳號尚未驗證" });
+    }
+
+    const token = createToken(user);
+    res.json({
+      success: true,
+      message: "登入成功",
+      token,
+      user: { username: user.username },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
 });
 
 // [GET] 取得目前登入使用者資料
-app.get('/api/user/me', authenticateToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
+app.get("/api/user/me", authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user)
+      return res.status(404).json({ success: false, message: "找不到使用者" });
 
-        res.json({ success: true, ...publicUserData(user) });
-    } catch (err) {
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
-    }
+    res.json({ success: true, ...publicUserData(user) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
 });
 
 // [GET] 取得特定使用者完整資料 (保留舊網址，但仍需 JWT)
-app.get('/api/user/:username', authenticateToken, async (req, res) => {
-    try {
-        if (req.params.username !== req.user.username) {
-            return res.status(403).json({ success: false, message: '無權限讀取此使用者資料' });
-        }
-
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ success: false, message: '找不到使用者' });
-
-        res.json({ success: true, ...publicUserData(user) });
-    } catch (err) {
-        res.status(500).json({ success: false, message: '伺服器錯誤' });
+app.get("/api/user/:username", authenticateToken, async (req, res) => {
+  try {
+    if (req.params.username !== req.user.username) {
+      return res
+        .status(403)
+        .json({ success: false, message: "無權限讀取此使用者資料" });
     }
+
+    const user = await User.findById(req.user.id);
+    if (!user)
+      return res.status(404).json({ success: false, message: "找不到使用者" });
+
+    res.json({ success: true, ...publicUserData(user) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "伺服器錯誤" });
+  }
 });
 
 // [PUT] 更新使用者詳細資料
-app.put('/api/user/update', authenticateToken, async (req, res) => {
-    try {
-        const { birthday, phone, preference } = req.body;
-        const updatedUser = await User.findOneAndUpdate(
-            { _id: req.user.id },
-            { birthday, phone, preference },
-            { new: true }
-        );
-        if (!updatedUser) return res.status(404).json({ success: false, message: '找不到使用者' });
+app.put("/api/user/update", authenticateToken, async (req, res) => {
+  try {
+    const { birthday, phone, preference } = req.body;
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: req.user.id },
+      { birthday, phone, preference },
+      { new: true },
+    );
+    if (!updatedUser)
+      return res.status(404).json({ success: false, message: "找不到使用者" });
 
-        res.json({ success: true, message: "更新成功", user: publicUserData(updatedUser) });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "更新失敗" });
-    }
+    res.json({
+      success: true,
+      message: "更新成功",
+      user: publicUserData(updatedUser),
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "更新失敗" });
+  }
 });
 
 // 啟動伺服器
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
