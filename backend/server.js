@@ -93,29 +93,7 @@ const initialProducts = [
     image: "images/feilei_1.jpg",
     category: "candy",
     description: "可以吹出超大泡泡的經典口香糖",
-    // 有口味的，改成物件陣列，每個口味都先綁上你提供的網址
-    options: [
-      {
-        flavor: "草莓",
-        sketchfabUrl:
-          "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44",
-      },
-      {
-        flavor: "橘子",
-        sketchfabUrl:
-          "https://sketchfab.com/3d-models/e30b75dca21d4abfb47c8b0c9751dab1",
-      },
-      {
-        flavor: "藍莓",
-        sketchfabUrl:
-          "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6",
-      },
-      {
-        flavor: "荔枝",
-        sketchfabUrl:
-          "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99",
-      },
-    ],
+    sketchfabUrl:"https://sketchfab.com/3d-models/fly-8447ca1ef44541c1b8c539bdd6492864"
   },
   {
     name: "可口可樂糖",
@@ -207,6 +185,28 @@ const initialProducts = [
     image: "images/old_chewing_gum.jpg",
     category: "candy",
     description: "酸甜果香的經典懷舊口香糖",
+    options: [
+      {
+        flavor: "草莓",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/7f176dec1ad8442f9ebc2d8651dcec44",
+      },
+      {
+        flavor: "橘子",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/e30b75dca21d4abfb47c8b0c9751dab1",
+      },
+      {
+        flavor: "藍莓",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/bd782967573c428798d8b28c27573ca6",
+      },
+      {
+        flavor: "荔枝",
+        sketchfabUrl:
+          "https://sketchfab.com/3d-models/0729b4ffde65402794525305bf668c99",
+      },
+    ],
     sketchfabUrl: "https://sketchfab.com/",
   },
   {
