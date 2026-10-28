@@ -175,7 +175,7 @@ const initialProducts = [
     image: "images/top_1.jpg",
     category: "toy",
     description: "童年常見的經典旋轉玩具",
-    sketchfabUrl: "https://sketchfab.com/",
+    sketchfabUrl: "https://sketchfab.com/3d-models/3759c7a381ad4210b9a891086582dac7",
   },
   {
     name: "健達出奇蛋",
@@ -183,7 +183,7 @@ const initialProducts = [
     image: "images/Kinder_Surprise.jpg",
     category: "candy",
     description: "巧克力外殼內含驚喜玩具的經典糖果",
-    sketchfabUrl: "https://sketchfab.com/",
+    sketchfabUrl: "https://sketchfab.com/3d-models/f5950a39489440f29f9b77cb5cfb6094",
   },
   {
     name: "小瓜呆脆笛酥",
@@ -191,7 +191,7 @@ const initialProducts = [
     image: "images/Wafer_Rolls.jpg",
     category: "cookie",
     description: "酥脆的威化捲心餅乾，內餡香甜可口",
-    sketchfabUrl: "https://sketchfab.com/",
+    sketchfabUrl: "https://sketchfab.com/3d-models/a99e70a8b5314219a1658b07c169692d",
   },
   {
     name: "劍玉",
@@ -199,7 +199,7 @@ const initialProducts = [
     image: "images/kendama.jpg",
     category: "toy",
     description: "考驗手眼協調與平衡感的經典童玩",
-    sketchfabUrl: "https://sketchfab.com/",
+    sketchfabUrl: "https://sketchfab.com/3d-models/12e545e93de646d7b42fa477ea678bfd",
   },
   {
     name: "水果口香糖",
