@@ -196,14 +196,6 @@ border-radius:20px;
 display:block;
 }
 
-.banner-clickable {
-    cursor: pointer;
-}
-
-.banner-clickable:hover {
-    filter: brightness(1.05);
-}
-
 /* products */
 
 .products-section {
