@@ -10,7 +10,16 @@ require("dotenv").config();
 const sgMail = require("@sendgrid/mail");
 
 const app = express();
-const JWT_SECRET = process.env.JWT_SECRET || "dev_jwt_secret_change_me";
+const JWT_SECRET = process.env.JWT_SECRET;
+if (
+  !JWT_SECRET ||
+  !JWT_SECRET.trim() ||
+  JWT_SECRET.trim() === "dev_jwt_secret_change_me"
+) {
+  throw new Error(
+    "JWT_SECRET 必須設定為非空白且非舊預設值的密鑰；請在 backend/.env 或部署環境設定。",
+  );
+}
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const SENDGRID_FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL;
 const SENDGRID_FROM_NAME =
@@ -18,12 +27,6 @@ const SENDGRID_FROM_NAME =
 
 if (SENDGRID_API_KEY) {
   sgMail.setApiKey(SENDGRID_API_KEY);
-}
-
-if (!process.env.JWT_SECRET) {
-  console.warn(
-    "⚠️ JWT_SECRET 未設定，目前使用開發用預設值。正式部署請在 Render 設定 JWT_SECRET。",
-  );
 }
 
 if (!SENDGRID_API_KEY || !SENDGRID_FROM_EMAIL) {
@@ -225,16 +228,7 @@ const initialProducts = [
     description: "酸甜開胃的古早味梅子餅",
     sketchfabUrl:
       "https://sketchfab.com/3d-models/4287a8b1267846ffb21ced0fd2b80b06",
-  },
-  {
-    name: "多拉A夢糖",
-    price: 20,
-    image: "images/doraemon.jpg",
-    category: "candy",
-    description: "以經典卡通角色多拉A夢為造型的糖果",
-    sketchfabUrl:
-      "https://sketchfab.com/3d-models/a81f81c6a3864ad59b3a8f86b1b53058",
-  },
+  }
 ];
 
 const initialHolePrizes = [
@@ -560,7 +554,18 @@ app.post("/api/register", async (req, res) => {
 // [POST] 驗證驗證碼
 app.post("/api/verify", async (req, res) => {
   try {
-    const { username, code } = req.body;
+    const { username, code } = req.body || {};
+    if (
+      typeof username !== "string" ||
+      !username.trim() ||
+      typeof code !== "string" ||
+      !/^[0-9]{6}$/.test(code)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "請提供有效帳號與六位數字驗證碼",
+      });
+    }
 
     // 萬用碼邏輯
     if (code === "000000") {
@@ -575,7 +580,12 @@ app.post("/api/verify", async (req, res) => {
     }
 
     const user = await User.findOne({ username, verificationCode: code });
-    if (!user || user.codeExpires < Date.now()) {
+    if (
+      !user ||
+      !(user.codeExpires instanceof Date) ||
+      !Number.isFinite(user.codeExpires.getTime()) ||
+      user.codeExpires.getTime() <= Date.now()
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "驗證碼錯誤或已過期" });
